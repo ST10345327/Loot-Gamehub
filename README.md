@@ -69,7 +69,7 @@ Local Storage: Room Database
 Backend: Custom REST API and MySQL Database
 
 External API: IGDB (Internet Game Database)
-<img width="1915" height="1030" alt="image" src="https://github.com/user-attachments/assets/0f8f9cae-2ac2-4343-9a85-93be0545a52b" />
+
 
 
 ## Architecture
