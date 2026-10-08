@@ -21,7 +21,7 @@ ST10437200, Nkosikhona Dlamini
 
 ## Demo video
 
-https://youtu.be/T6mjEAAWMFs
+https://www.youtube.com/watch?v=2OWWyBeUR_A
 
 ## Purpose of the app
 
