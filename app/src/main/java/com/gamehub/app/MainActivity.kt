@@ -1,7 +1,7 @@
 package com.gamehub.app
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
@@ -13,7 +13,7 @@ import com.gamehub.app.ui.settings.SettingsViewModel
 import com.gamehub.app.ui.theme.LootTheme
 import com.gamehub.app.utils.AppLogger
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
