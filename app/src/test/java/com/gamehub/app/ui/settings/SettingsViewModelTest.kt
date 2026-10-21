@@ -37,4 +37,23 @@ class SettingsViewModelTest {
 
         assertEquals(AppLanguage.SETSWANA, viewModel.uiState.value.language)
     }
+
+    @Test
+    fun appLanguage_fromTag_returnsExpectedLanguage() {
+        assertEquals(AppLanguage.ENGLISH, AppLanguage.fromTag("en"))
+        assertEquals(AppLanguage.SETSWANA, AppLanguage.fromTag("tn"))
+        assertEquals(AppLanguage.ISIZULU, AppLanguage.fromTag("zu"))
+        assertEquals(AppLanguage.ENGLISH, AppLanguage.fromTag("invalid"))
+        assertEquals(AppLanguage.ENGLISH, AppLanguage.fromTag(null))
+    }
+
+    @Test
+    fun appLanguage_propertiesAreConfigured() {
+        assertEquals("en", AppLanguage.ENGLISH.tag)
+        assertEquals("English", AppLanguage.ENGLISH.nativeName)
+        assertEquals("tn", AppLanguage.SETSWANA.tag)
+        assertEquals("Setswana", AppLanguage.SETSWANA.nativeName)
+        assertEquals("zu", AppLanguage.ISIZULU.tag)
+        assertEquals("isiZulu", AppLanguage.ISIZULU.nativeName)
+    }
 }
