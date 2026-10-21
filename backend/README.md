@@ -25,11 +25,37 @@ Getting IGDB credentials: create an application at https://dev.twitch.tv/console
 ## Tests
 
 ```bash
-npm test                     # unit tests only (API tests are skipped without a database)
+npm run test:unit             # deterministic tests; no database or external API calls
+npm test                      # all tests; DB integration cases are skipped without TEST_DB_HOST
+npm run test:integration      # API/MySQL tests only
 
-# full run, including end-to-end API tests. WARNING: drops and recreates the tables in that database.
-TEST_DB_HOST=127.0.0.1 TEST_DB_USER=<user> TEST_DB_PASSWORD=<pw> TEST_DB_NAME=<empty test db> npm test
+# Full run, including MySQL API tests. This DROPS and recreates tables in gamehub_test.
+TEST_DB_HOST=127.0.0.1 TEST_DB_PORT=3306 TEST_DB_USER=<test-user> \
+TEST_DB_PASSWORD=<test-password> TEST_DB_NAME=gamehub_test \
+TEST_DB_ALLOW_RESET=true npm test
 ```
+
+The integration suite only runs when `TEST_DB_HOST` is set. To prevent accidental data loss,
+it also requires `TEST_DB_NAME` to end in `_test` or `_tests` and the explicit
+`TEST_DB_ALLOW_RESET=true` opt-in. If `DB_NAME` is set, the test database must differ from it.
+Use a dedicated, empty database and a test-only account; never point these variables at
+development or production data. The suite drops and recreates its tables before running.
+
+PowerShell example:
+
+```powershell
+$env:TEST_DB_HOST = "127.0.0.1"
+$env:TEST_DB_PORT = "3306"
+$env:TEST_DB_USER = "gamehub_test_user"
+$env:TEST_DB_PASSWORD = "<test-only-password>"
+$env:TEST_DB_NAME = "gamehub_test"
+$env:TEST_DB_ALLOW_RESET = "true"
+npm test
+```
+
+The GitHub Actions backend job starts an ephemeral MySQL 8 service and runs the complete
+suite against the dedicated `gamehub_test` database. The CI database credentials are
+test-only and are not used by the application deployment.
 
 ## Hosting (needed for the demo video)
 
