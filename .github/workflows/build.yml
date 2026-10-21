@@ -1,17 +1,27 @@
-# GitHub Actions workflow: builds the app and runs the unit tests on every push
-# and on every pull request into main.
+
 name: Android CI
 
 on:
   push:
     branches: ["**"]
   pull_request:
-    branches: [main]
+    branches:
+      - develop
+      - main
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
+    name: Build, test and lint Android app
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Check out repository
@@ -21,26 +31,46 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: "17"
 
-      - name: Set up Gradle (with caching)
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Make gradlew executable
+      - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Run unit tests and build debug APK
-        run: ./gradlew testDebugUnitTest assembleDebug --stacktrace
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Run Android lint
+        run: ./gradlew lintDebug --stacktrace
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload unit test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: unit-test-reports
+          name: android-unit-test-reports
           path: app/build/reports/tests/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload Android lint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-lint-reports
+          path: app/build/reports/lint-results-debug.*
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Upload debug APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: loot-gamehub-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
