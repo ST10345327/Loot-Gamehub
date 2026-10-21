@@ -11,7 +11,9 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "db:init": "node scripts/init-db.js",
-    "test": "node --test"
+    "test": "node --test",
+    "test:unit": "node --test test/igdb.test.js test/validation.test.js",
+    "test:integration": "node --test test/api.test.js"
   },
   "license": "UNLICENSED",
   "dependencies": {

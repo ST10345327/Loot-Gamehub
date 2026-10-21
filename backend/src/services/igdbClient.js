@@ -1,5 +1,7 @@
 'use strict';
 
+const { Errors } = require('../utils/errors');
+
 const API_BASE_URL = 'https://api.igdb.com/v4';
 const OAUTH_URL = 'https://id.twitch.tv/oauth2/token';
 
@@ -14,14 +16,46 @@ const OAUTH_URL = 'https://id.twitch.tv/oauth2/token';
  * Credentials are supplied through config.igdb.
  */
 class IgdbClient {
-  constructor({ clientId, clientSecret }) {
+  constructor({ clientId, clientSecret, fetchImpl = globalThis.fetch, timeoutMs = 10_000 }) {
     this.clientId = clientId;
     this.clientSecret = clientSecret;
+    this.fetchImpl = fetchImpl;
+    this.timeoutMs = timeoutMs;
 
     this.accessToken = null;
     this.tokenExpiresAt = 0;
 
-    this.isConfigured = Boolean(clientId && clientSecret);
+    this.isConfigured =
+      typeof clientId === 'string' &&
+      clientId.trim().length > 0 &&
+      typeof clientSecret === 'string' &&
+      clientSecret.trim().length > 0 &&
+      typeof fetchImpl === 'function' &&
+      Number.isFinite(timeoutMs) &&
+      timeoutMs > 0;
+  }
+
+  async request(url, options) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+    try {
+      return await this.fetchImpl(url, { ...options, signal: controller.signal });
+    } catch (error) {
+      if (error && error.name === 'AbortError') {
+        throw Errors.upstream('The game service request timed out.');
+      }
+      throw Errors.upstream();
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  async responseJson(response) {
+    try {
+      return await response.json();
+    } catch {
+      throw Errors.upstream('The game service returned an invalid response.');
+    }
   }
 
   /**
@@ -29,7 +63,7 @@ class IgdbClient {
    */
   async getAccessToken() {
     if (!this.isConfigured) {
-      throw new Error('IGDB is not configured.');
+      throw Errors.notConfigured();
     }
 
     // Reuse the existing token if it has not expired.
@@ -46,23 +80,29 @@ class IgdbClient {
       grant_type: 'client_credentials',
     });
 
-    const response = await fetch(`${OAUTH_URL}?${params.toString()}`, {
+    const response = await this.request(`${OAUTH_URL}?${params.toString()}`, {
       method: 'POST',
     });
 
     if (!response.ok) {
-      const body = await response.text();
-      throw new Error(
-        `IGDB authentication failed (${response.status}): ${body}`
-      );
+      throw Errors.upstream();
     }
 
-    const data = await response.json();
+    const data = await this.responseJson(response);
+    if (
+      !data ||
+      typeof data.access_token !== 'string' ||
+      data.access_token.length === 0 ||
+      !Number.isFinite(Number(data.expires_in)) ||
+      Number(data.expires_in) <= 0
+    ) {
+      throw Errors.upstream('The game service returned an invalid authentication response.');
+    }
 
     this.accessToken = data.access_token;
 
     // Refresh slightly before the actual expiry time.
-    const expiresInMs = Number(data.expires_in || 3600) * 1000;
+    const expiresInMs = Number(data.expires_in) * 1000;
     this.tokenExpiresAt = Date.now() + expiresInMs - 60_000;
 
     return this.accessToken;
@@ -76,14 +116,12 @@ class IgdbClient {
    */
   async query(endpoint, queryBody) {
     if (!this.isConfigured) {
-      const error = new Error('IGDB is not configured.');
-      error.status = 503;
-      throw error;
+      throw Errors.notConfigured();
     }
 
     const accessToken = await this.getAccessToken();
 
-    const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+    const response = await this.request(`${API_BASE_URL}/${endpoint}`, {
       method: 'POST',
       headers: {
         'Client-ID': this.clientId,
@@ -100,7 +138,7 @@ class IgdbClient {
 
       const newToken = await this.getAccessToken();
 
-      const retryResponse = await fetch(`${API_BASE_URL}/${endpoint}`, {
+      const retryResponse = await this.request(`${API_BASE_URL}/${endpoint}`, {
         method: 'POST',
         headers: {
           'Client-ID': this.clientId,
@@ -111,26 +149,27 @@ class IgdbClient {
       });
 
       if (!retryResponse.ok) {
-        const body = await retryResponse.text();
-        throw new Error(
-          `IGDB request failed (${retryResponse.status}): ${body}`
-        );
+        throw Errors.upstream();
       }
 
-      return retryResponse.json();
+      return this.parseQueryResponse(await this.responseJson(retryResponse));
     }
 
     if (!response.ok) {
-      const body = await response.text();
-
-      const error = new Error(
-        `IGDB request failed (${response.status}): ${body}`
-      );
-      error.status = response.status;
-      throw error;
+      throw Errors.upstream();
     }
 
-    return response.json();
+    return this.parseQueryResponse(await this.responseJson(response));
+  }
+
+  parseQueryResponse(data) {
+    if (
+      Array.isArray(data) ||
+      (data && typeof data === 'object' && Number.isInteger(data.count) && data.count >= 0)
+    ) {
+      return data;
+    }
+    throw Errors.upstream('The game service returned an unexpected response.');
   }
 }
 
