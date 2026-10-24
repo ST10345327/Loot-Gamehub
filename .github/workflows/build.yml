@@ -65,7 +65,7 @@ jobs:
   build:
     name: Build, test and lint Android app
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Check out repository
@@ -88,6 +88,57 @@ jobs:
 
       - name: Run Android lint
         run: ./gradlew lintDebug --stacktrace
+
+      - name: Assemble instrumented tests (not executed without an emulator)
+        run: ./gradlew assembleDebugAndroidTest --stacktrace
+
+      - name: Run Android instrumentation tests on API 35 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: ./gradlew --no-configuration-cache connectedDebugAndroidTest --stacktrace
+
+      - name: Test release API URL policy
+        run: ./gradlew testReleaseApiConfiguration --stacktrace
+
+      - name: Verify missing release URL fails the actual release build gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if output="$(./gradlew --no-configuration-cache assembleRelease 2>&1)"; then
+            echo "assembleRelease unexpectedly succeeded without RELEASE_API_BASE_URL"
+            exit 1
+          fi
+          printf '%s\n' "$output" | grep -F "Set RELEASE_API_BASE_URL to the hosted HTTPS API before building a release."
+
+      - name: Verify release API validation errors
+        shell: bash
+        run: |
+          set -euo pipefail
+          assert_rejected() {
+            local endpoint="$1"
+            local expected="$2"
+            local output
+            if output="$(./gradlew --no-configuration-cache validateReleaseApiConfiguration "-PRELEASE_API_BASE_URL=$endpoint" 2>&1)"; then
+              echo "Release URL policy unexpectedly accepted $endpoint"
+              exit 1
+            fi
+            if ! grep -Fq "$expected" <<<"$output"; then
+              printf '%s\n' "$output"
+              echo "Expected validation message was missing: $expected"
+              exit 1
+            fi
+          }
+          assert_rejected "http://api.example.test/" "Release builds require an HTTPS API base URL."
+          assert_rejected "https://127.0.0.1/" "Release builds must not use a local-only API base URL."
+          assert_rejected "https://[::1]/" "Release builds must not use a local-only API base URL."
+          ./gradlew --no-configuration-cache validateReleaseApiConfiguration -PRELEASE_API_BASE_URL=https://api.example.test/
+
+      - name: Build release APK with validation-only HTTPS fixture
+        run: ./gradlew assembleRelease -PRELEASE_API_BASE_URL=https://api.example.test/ --stacktrace
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace

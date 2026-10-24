@@ -73,7 +73,14 @@ _Add a screenshot of a passing run._
 ## How to run
 
 1. Clone the repository and open it in Android Studio.
-2. Let Gradle sync, then run the `app` configuration on a device or emulator.
+2. Set the development API base URL to the backend reachable from your device or emulator. The default is `http://10.0.2.2:3000/`, which reaches a backend running on the host from the standard Android emulator. Override it with either a Gradle property (`DEV_API_BASE_URL`) or an environment variable of the same name. The URL must end in `/`. Debug builds permit HTTP for local development.
+3. Let Gradle sync, then run the `app` configuration on a device or emulator.
+
+Release builds require `RELEASE_API_BASE_URL` to be configured as a hosted HTTPS URL with a trailing `/`. Set it as a local Gradle property or environment variable; do not commit production endpoints containing private infrastructure details or credentials. The release build rejects HTTP, local-only hosts, invalid ports, credentials, query strings and URL fragments. A real hosted HTTPS endpoint has not been configured in this repository. CI uses `https://api.example.test/` only as a validation/build fixture; it is not a deployed API endpoint.
+
+The session token is encrypted using an Android Keystore AES-GCM key. Existing plaintext tokens are migrated at app startup; if the token cannot be decrypted, the saved session is cleared. The DataStore file is excluded from cloud backup and device transfer because its encryption key is device-bound. This also means saved theme, language and onboarding preferences in that file will not transfer to a new device.
+
+Run `./gradlew testDebugUnitTest`, `./gradlew lintDebug`, `./gradlew assembleDebug`, and `./gradlew assembleDebugAndroidTest` to run local checks. Assembling the Android-test APK compiles the instrumentation tests but does not execute them. GitHub Actions does not currently provision an emulator, so instrumentation tests are not executed in CI; execution requires a connected device or emulator and `./gradlew connectedDebugAndroidTest`.
 
 ## AI use statement
 

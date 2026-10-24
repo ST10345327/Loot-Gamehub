@@ -32,7 +32,9 @@ class AppContainer(context: Context) {
 
     private val settingsStore = SettingsStore(appContext.gameHubDataStore)
     val settingsRepository: SettingsRepository = SettingsRepositoryImpl(settingsStore)
-    private val apiCaller = ApiCaller(onSessionExpired = { sessionStore.clear() })
+    private val apiCaller = ApiCaller(onSessionExpired = { token ->
+        if (token != null) sessionStore.clearIfTokenMatches(token)
+    })
     private val okHttpClient: OkHttpClient = buildOkHttpClient()
 
     private val api: LootApi = Retrofit.Builder()
@@ -51,6 +53,8 @@ class AppContainer(context: Context) {
     )
 
     val libraryRepository: LibraryRepository = LibraryRepositoryImpl(api, apiCaller)
+
+    suspend fun migrateLegacySessionToken() = sessionStore.migrateLegacyToken()
 
     private fun buildOkHttpClient(): OkHttpClient {
         val builder = OkHttpClient.Builder()

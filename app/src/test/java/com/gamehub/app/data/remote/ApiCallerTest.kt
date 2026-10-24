@@ -4,6 +4,9 @@ import java.io.IOException
 import java.net.SocketTimeoutException
 import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Protocol
+import okhttp3.Request
+import okhttp3.Response as OkHttpResponse
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -13,12 +16,25 @@ import retrofit2.Response
 /** Checks that every kind of failure becomes an [ApiResult] instead of crashing the app. */
 class ApiCallerTest {
 
-    private var sessionExpiredCalls = 0
-    private val caller = ApiCaller(onSessionExpired = { sessionExpiredCalls++ })
+    private val expiredTokens = mutableListOf<String?>()
+    private val caller = ApiCaller(onSessionExpired = { expiredTokens += it })
 
-    private fun httpError(code: Int, body: String) = HttpException(
-        Response.error<Any>(code, body.toResponseBody("application/json".toMediaType()))
-    )
+    private fun httpError(code: Int, body: String, token: String? = null): HttpException {
+        val request = Request.Builder()
+            .url("https://api.example.test/")
+            .apply { if (token != null) header("Authorization", "Bearer $token") }
+            .build()
+        val rawResponse = OkHttpResponse.Builder()
+            .request(request)
+            .protocol(Protocol.HTTP_1_1)
+            .code(code)
+            .message("error")
+            .body("".toResponseBody())
+            .build()
+        return HttpException(
+            Response.error<Any>(body.toResponseBody("application/json".toMediaType()), rawResponse)
+        )
+    }
 
     @Test
     fun success_isWrapped() = runTest {
@@ -28,11 +44,15 @@ class ApiCallerTest {
     @Test
     fun expiredToken_clearsTheSession() = runTest {
         val result = caller.call<Unit> {
-            throw httpError(401, """{"error":{"code":"TOKEN_EXPIRED","message":"x"}}""")
+            throw httpError(
+                401,
+                """{"error":{"code":"TOKEN_EXPIRED","message":"x"}}""",
+                token = "expired-token"
+            )
         }
 
         assertEquals(ApiResult.Failure(ApiError.SessionExpired), result)
-        assertEquals(1, sessionExpiredCalls)
+        assertEquals(listOf("expired-token"), expiredTokens)
     }
 
     @Test
@@ -42,7 +62,7 @@ class ApiCallerTest {
         }
 
         assertEquals(ApiResult.Failure(ApiError.InvalidCredentials), result)
-        assertEquals(0, sessionExpiredCalls)
+        assertEquals(emptyList<String?>(), expiredTokens)
     }
 
     @Test

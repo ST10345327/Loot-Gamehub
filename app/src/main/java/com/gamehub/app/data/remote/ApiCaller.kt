@@ -13,7 +13,7 @@ import retrofit2.HttpException
  * [onSessionExpired] is invoked when the server says our token is no longer valid; the
  * container uses it to delete the saved session, which sends the user back to Login.
  */
-class ApiCaller(private val onSessionExpired: suspend () -> Unit) {
+class ApiCaller(private val onSessionExpired: suspend (String?) -> Unit) {
 
     suspend fun <T> call(block: suspend () -> T): ApiResult<T> {
         return try {
@@ -24,7 +24,13 @@ class ApiCaller(private val onSessionExpired: suspend () -> Unit) {
             val body = e.response()?.errorBody()?.string()
             val error = ApiErrorMapper.fromHttp(e.code(), body)
             AppLogger.warn("HTTP ${e.code()} -> $error")
-            if (error == ApiError.SessionExpired) onSessionExpired()
+            if (error == ApiError.SessionExpired) {
+                val authorization = e.response()?.raw()?.request?.header("Authorization")
+                val failedToken = authorization
+                    ?.takeIf { it.startsWith("Bearer ", ignoreCase = true) }
+                    ?.substringAfter(' ')
+                onSessionExpired(failedToken)
+            }
             ApiResult.Failure(error)
         } catch (e: SocketTimeoutException) {
             AppLogger.warn("Request timed out")
