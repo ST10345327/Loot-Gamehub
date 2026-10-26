@@ -29,6 +29,7 @@ function createPool(dbConfig) {
     if (!exists) {
       throw new Error('DB_SSL_CA_PATH does not point to an existing CA file.');
     }
+
     sslOptions = { ca, rejectUnauthorized: true };
   }
 
