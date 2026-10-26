@@ -7,12 +7,31 @@ const mysql = require('mysql2/promise');
 function createPool(dbConfig) {
   const caPath = process.env.DB_SSL_CA_PATH;
 
-  const sslOptions = dbConfig.ssl
-    ? {
-        rejectUnauthorized: true,
-        ...(caPath ? { ca: fs.readFileSync(caPath, 'utf8') } : {}),
+  let sslOptions;
+  if (dbConfig.ssl) {
+    const exists = Boolean(caPath) && fs.existsSync(caPath);
+    let ca;
+    if (exists) {
+      try {
+        fs.accessSync(caPath, fs.constants.R_OK);
+        ca = fs.readFileSync(caPath, 'utf8');
+      } catch {
+        console.error('[db] TLS CA status: configured=true exists=true readable=false');
+        throw new Error('DB_SSL_CA_PATH does not point to a readable CA file.');
       }
-    : undefined;
+    }
+
+    const readable = typeof ca === 'string';
+    console.info(`[db] TLS CA status: configured=${Boolean(caPath)} exists=${exists} readable=${readable}`);
+    if (!caPath) {
+      throw new Error('DB_SSL_CA_PATH is required when DB_SSL=true.');
+    }
+    if (!exists) {
+      throw new Error('DB_SSL_CA_PATH does not point to an existing CA file.');
+    }
+    sslOptions = { ca, rejectUnauthorized: true };
+  }
+  }
 
   return mysql.createPool({
     host: dbConfig.host,
@@ -24,8 +43,8 @@ function createPool(dbConfig) {
     waitForConnections: true,
     connectionLimit: 10,
     charset: 'utf8mb4',
-    timezone: 'Z',        // store and read DATETIME values as UTC
-    decimalNumbers: true, // return DECIMAL columns (ratings) as numbers, not strings
+    timezone: 'Z',
+    decimalNumbers: true,
   });
 }
 
