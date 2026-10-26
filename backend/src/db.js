@@ -31,7 +31,6 @@ function createPool(dbConfig) {
     }
     sslOptions = { ca, rejectUnauthorized: true };
   }
-  }
 
   return mysql.createPool({
     host: dbConfig.host,
