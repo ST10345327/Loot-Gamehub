@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gamehub.app.R
 import com.gamehub.app.ui.common.messageRes
@@ -31,6 +33,10 @@ import com.gamehub.app.ui.library.SavedGameRow
 fun WishlistScreen(viewModel: WishlistViewModel, onGameClick: (Int) -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = MaterialTheme.colorScheme
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.refresh()
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(top = 16.dp)) {
         Text(stringResource(R.string.wishlist_title), style = MaterialTheme.typography.headlineMedium, color = colors.onBackground, modifier = Modifier.padding(horizontal = 20.dp))
