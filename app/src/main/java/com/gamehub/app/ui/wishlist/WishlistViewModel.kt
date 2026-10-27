@@ -34,6 +34,7 @@ class WishlistViewModel(private val libraryRepository: LibraryRepository) : View
     init { load() }
 
     fun retry() = load()
+    fun refresh() = load()
     fun selectTab(tab: WishlistTab) { _uiState.update { it.copy(tab = tab) } }
 
     fun removeWishlistGame(gameId: Int) {
