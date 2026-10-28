@@ -1,11 +1,15 @@
 package com.gamehub.app.ui.library
 
 import com.gamehub.app.data.model.LibraryStatus
+import com.gamehub.app.data.model.SavedGame
 import com.gamehub.app.data.remote.ApiError
 import com.gamehub.app.data.remote.ApiResult
+import com.gamehub.app.data.repository.LibraryRepository
 import com.gamehub.app.testing.FakeLibraryRepository
 import com.gamehub.app.testing.MainDispatcherRule
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -34,6 +38,50 @@ class LibraryViewModelTest {
         assertFalse(state.isLoading)
         assertEquals(games, state.allGames)
         assertEquals(games, state.visibleGames)
+    }
+
+    @Test
+    fun firstResume_doesNotDuplicateInitialLoad() = runTest {
+        val viewModel = createViewModel()
+
+        viewModel.onResume()
+
+        assertEquals(1, repository.getLibraryCalls)
+    }
+
+    @Test
+    fun returningToLibrary_refreshesSavedGames() = runTest {
+        val viewModel = createViewModel()
+        viewModel.onResume()
+        val updatedGames = listOf(FakeLibraryRepository.TEST_SAVED_GAME.copy(status = LibraryStatus.COMPLETED))
+        repository.libraryResult = ApiResult.Success(updatedGames)
+
+        viewModel.onResume()
+
+        assertEquals(2, repository.getLibraryCalls)
+        assertEquals(updatedGames, viewModel.uiState.value.allGames)
+    }
+
+    @Test
+    fun returningWhileInitialLoadIsInFlight_queuesOneRefresh() = runTest {
+        val initialResponse = CompletableDeferred<ApiResult<List<SavedGame>>>()
+        val updatedGames = listOf(FakeLibraryRepository.TEST_SAVED_GAME.copy(status = LibraryStatus.PLAYING))
+        var calls = 0
+        val delayedRepository = object : LibraryRepository by repository {
+            override suspend fun getLibrary(status: LibraryStatus?): ApiResult<List<SavedGame>> {
+                calls++
+                return if (calls == 1) initialResponse.await() else ApiResult.Success(updatedGames)
+            }
+        }
+        val viewModel = LibraryViewModel(delayedRepository)
+
+        viewModel.onResume()
+        viewModel.onResume()
+        initialResponse.complete(ApiResult.Success(emptyList()))
+        advanceUntilIdle()
+
+        assertEquals(2, calls)
+        assertEquals(updatedGames, viewModel.uiState.value.allGames)
     }
 
     @Test
