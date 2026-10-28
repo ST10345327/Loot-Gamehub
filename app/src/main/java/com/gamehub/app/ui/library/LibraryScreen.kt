@@ -34,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gamehub.app.R
 import com.gamehub.app.data.model.LibraryStatus
@@ -47,6 +49,10 @@ import com.gamehub.app.ui.components.RatingBadge
 fun LibraryScreen(viewModel: LibraryViewModel, onGameClick: (Int) -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = MaterialTheme.colorScheme
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.onResume()
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(top = 16.dp)) {
         Text(stringResource(R.string.library_title), style = MaterialTheme.typography.headlineMedium, color = colors.onBackground, modifier = Modifier.padding(horizontal = 20.dp))

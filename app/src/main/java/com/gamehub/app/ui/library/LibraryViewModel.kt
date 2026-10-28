@@ -29,9 +29,19 @@ class LibraryViewModel(private val libraryRepository: LibraryRepository) : ViewM
     private val _uiState = MutableStateFlow(LibraryUiState())
     val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
 
+    private var hasResumedOnce = false
+    private var refreshPending = false
+
     init { load() }
 
     fun retry() = load()
+    fun onResume() {
+        if (hasResumedOnce) {
+            if (_uiState.value.isLoading) refreshPending = true else load()
+        }
+        hasResumedOnce = true
+    }
+
     fun selectFilter(status: LibraryStatus?) { _uiState.update { it.copy(selectedFilter = status) } }
 
     fun removeGame(gameId: Int) {
@@ -52,6 +62,10 @@ class LibraryViewModel(private val libraryRepository: LibraryRepository) : ViewM
                     AppLogger.warn("Library failed to load: ${result.error}")
                     _uiState.update { it.copy(isLoading = false, error = result.error) }
                 }
+            }
+            if (refreshPending) {
+                refreshPending = false
+                load()
             }
         }
     }
