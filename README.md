@@ -2,9 +2,9 @@
 
 ![Android CI](https://github.com/ST10345327/Loot-Gamehub/actions/workflows/build.yml/badge.svg)
 
-A game discovery and personal library app for Android, built with Kotlin and Jetpack Compose.
-Users can search games (IGDB), save them to a personal library, wishlist and favourites,
-compare titles and get a random recommendation with **Surprise Me**.
+A game discovery and personal library app for Android, built with Kotlin and Android Views.
+Users can discover and search games, manage a library, wishlist and favourites, compare titles,
+and get a random recommendation with **Surprise Me**.
 
 **Module:** OPSC6311 - Part 2: App Prototype Development
 
@@ -36,76 +36,47 @@ GameHub acts as a bridge to the world of video games. Using IGDB API (Internet G
 2. Game Library Management
 Apart from being a platform for discovery, GameHub also lets its users create and manage their personal libraries of games. The games are organized in various statuses like Want to Play, Playing and Completed.
 
-## Design considerations
+## Screenshots
 
-The app uses the design approach which prioritizes clearness and accessibility.
-
-Visual Identity & UI
-Visual Style: The design of the UI uses the elements from Material Design. It includes dark visual theme by default (as seen in mockups) with bright accent color for interactive elements.
-
-Iconography: The icon of the app (Loot Game Center) has dark background with four colored icons (Square, Triangle, Cross, Circle), corresponding to controller buttons.
-
-Typography: Clean sans-serif font. Big bold typography used for names of games, secondary typography used for additional information (game rating, release year, genre).
-
-Screen Structure
-The app has linear screen structure:
-Splash Screen → Onboarding → Login/Registration → Home
-
-Home/Discover: Screen includes personalized greeting, search bar, and categories for Trending Now, Popular Games and Upcoming Releases.
-
-Game Details: High quality images for covers, game descriptions, rating and buttons to Add to Library, Wishlist, Favourites and Compare games.
-
-Comparison: A separate screen, where a user can select two games and compare their statistics.
-
-Architecture & Technology Stack
-Language: Kotlin
-
-Architecture: MVVM (Model-View-ViewModel)
-
-Networking: Retrofit / OkHttp
-
-Local Storage: Room Database
-
-Backend: Custom REST API and MySQL Database
-
-External API: IGDB (Internet Game Database)
-
-
+App screenshots will be added after they are uploaded.
 
 ## Architecture
 
-MVVM with a repository layer:
+The Android client uses Kotlin, Android Views/XML layouts, ViewModels, repositories,
+Retrofit and OkHttp. The Node.js/Express backend provides the REST API, stores account and
+personal-list data in MySQL, and proxies game data from IGDB. DataStore persists app settings
+and the encrypted session token on-device.
 
 ```
 com.gamehub.app
 ├── data
-│   ├── remote      # Retrofit services (own REST API)
-│   ├── local       # Room (offline cache) + DataStore (settings)
-│   ├── repository  # single source of truth for the ViewModels
-│   └── model       # data classes
-├── ui
-│   ├── theme       # colours, typography, GameHubTheme
-│   ├── navigation  # routes, NavHost, bottom bar
-│   ├── components  # reusable composables
-│   └── <feature>   # screen + ViewModel per feature
-└── util
+│   ├── local        # DataStore settings and encrypted session
+│   ├── remote       # Retrofit API, DTOs and auth interceptor
+│   ├── repository   # API/session coordination
+│   └── model
+├── ui               # Fragments, ViewModels and view adapters
+└── utils
 ```
 
 ## REST API and database
 
-_Endpoint table, hosting provider, database screenshots. To be completed in Phase 2._
+The Express API and its setup instructions, endpoint list, and security notes are documented
+in [backend/README.md](backend/README.md). MySQL stores accounts, saved games, settings, and
+notification data. IGDB credentials and database connection details are configured on the
+backend and are not shipped in the Android app.
 
 ## Features
 
-| Feature | Status |
+| Feature | Availability |
 | --- | --- |
-| Project setup, navigation, theme, 3 languages (strings) | In progress |
-| Register / login (hashed passwords, token) | Planned |
-| IGDB search and game details | Planned |
-| Library, wishlist, favourites | Planned |
-| Settings (theme, language, sign out) | Planned |
-| Game comparison, Surprise Me | Planned |
-| Deferred to PoE: Google Sign-In, push notifications, full offline sync | Deferred |
+| Email/password registration and login | Available |
+| Google Sign-In | Available (requires Firebase configuration) |
+| Game discovery, search, filters and details | Available |
+| Library, wishlist, favourites and recently viewed | Available |
+| Game comparison and Surprise Me | Available |
+| Theme and English, Setswana, isiZulu preferences | Available |
+| Notification preferences and notification history | Available |
+| Offline access | Settings are available offline; network-backed features require a connection |
 
 ## GitHub and GitHub Actions
 
@@ -118,7 +89,13 @@ Every push and pull request runs `.github/workflows/build.yml`, which runs the u
 ## How to run
 
 1. Clone the repository and open it in Android Studio.
-2. Let Gradle sync, then run the `app` configuration on a device or emulator.
+2. Configure Firebase for Android if you want to use Google Sign-In or push notifications.
+3. Configure and start the backend by following [backend/README.md](backend/README.md).
+4. Confirm `ApiConfig.kt` points to the intended API base URL.
+5. Let Gradle sync, then run the `app` configuration on a device or emulator.
+
+The backend requires Node.js 18 or later and a configured MySQL database. The README in the
+backend folder describes environment variables, database initialization, and tests.
 
 ## AI use statement
 
