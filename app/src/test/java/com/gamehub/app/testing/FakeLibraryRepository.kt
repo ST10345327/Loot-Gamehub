@@ -5,6 +5,7 @@ import com.gamehub.app.data.model.LibraryStatus
 import com.gamehub.app.data.model.SavedGame
 import com.gamehub.app.data.remote.ApiResult
 import com.gamehub.app.data.repository.LibraryRepository
+import kotlinx.coroutines.CompletableDeferred
 
 class FakeLibraryRepository : LibraryRepository {
     var libraryResult: ApiResult<List<SavedGame>> = ApiResult.Success(emptyList())
@@ -13,13 +14,21 @@ class FakeLibraryRepository : LibraryRepository {
     var saveResult: ApiResult<SavedGame> = ApiResult.Success(TEST_SAVED_GAME)
     var removeResult: ApiResult<Unit> = ApiResult.Success(Unit)
     var moveResult: ApiResult<SavedGame> = ApiResult.Success(TEST_SAVED_GAME)
+    var libraryGate: CompletableDeferred<Unit>? = null
 
     val removeLibraryCalls = mutableListOf<Int>()
+    val getLibraryCalls = mutableListOf<LibraryStatus?>()
     val removeWishlistCalls = mutableListOf<Int>()
     val removeFavoriteCalls = mutableListOf<Int>()
+    val addFavoriteCalls = mutableListOf<Int>()
+    val addWishlistCalls = mutableListOf<Int>()
     val moveToLibraryCalls = mutableListOf<Pair<Int, LibraryStatus>>()
 
-    override suspend fun getLibrary(status: LibraryStatus?): ApiResult<List<SavedGame>> = libraryResult
+    override suspend fun getLibrary(status: LibraryStatus?): ApiResult<List<SavedGame>> {
+        getLibraryCalls.add(status)
+        libraryGate?.await()
+        return libraryResult
+    }
 
     override suspend fun saveToLibrary(game: Game, status: LibraryStatus): ApiResult<SavedGame> = saveResult
 
@@ -30,7 +39,10 @@ class FakeLibraryRepository : LibraryRepository {
 
     override suspend fun getFavourites(): ApiResult<List<SavedGame>> = favoritesResult
 
-    override suspend fun addFavourite(game: Game): ApiResult<SavedGame> = saveResult
+    override suspend fun addFavourite(game: Game): ApiResult<SavedGame> {
+        addFavoriteCalls.add(game.id)
+        return saveResult
+    }
 
     override suspend fun removeFavourite(gameId: Int): ApiResult<Unit> {
         removeFavoriteCalls.add(gameId)
@@ -39,7 +51,10 @@ class FakeLibraryRepository : LibraryRepository {
 
     override suspend fun getWishlist(): ApiResult<List<SavedGame>> = wishlistResult
 
-    override suspend fun addToWishlist(game: Game): ApiResult<SavedGame> = saveResult
+    override suspend fun addToWishlist(game: Game): ApiResult<SavedGame> {
+        addWishlistCalls.add(game.id)
+        return saveResult
+    }
 
     override suspend fun removeFromWishlist(gameId: Int): ApiResult<Unit> {
         removeWishlistCalls.add(gameId)

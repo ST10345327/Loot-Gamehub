@@ -148,7 +148,7 @@ test('service random picks a position inside the match window', async () => {
   await assert.rejects(() => empty.random({}), (e) => e.code === 'NOT_FOUND');
 });
 
-// ---- IGDB client (with a fake fetch) ---------------------------------------------
+// ---- IGDB client (all HTTP calls use an injected fake transport) ------------------
 
 function fakeFetch(handlers) {
   const calls = [];
@@ -166,12 +166,17 @@ test('client fetches a token once, then reuses it', async () => {
     () => json(200, [{ id: 1 }]),
     () => json(200, [{ id: 2 }]),
   ]);
-  const client = new IgdbClient({ clientId: 'id', clientSecret: 's', fetchImpl: impl, sleep: async () => {}, minIntervalMs: 0 });
+  const client = new IgdbClient({ clientId: 'test-client-id', clientSecret: 'test-client-secret', fetchImpl: impl });
 
   assert.deepEqual(await client.query('games', 'fields name;'), [{ id: 1 }]);
   assert.deepEqual(await client.query('games', 'fields name;'), [{ id: 2 }]);
   assert.equal(calls.filter((c) => c.url.includes('oauth2/token')).length, 1);
-  assert.equal(calls[1].options.headers.Authorization, 'Bearer tok');
+  assert.equal(calls.length, 3);
+  assert.equal(calls[0].options.method, 'POST');
+  assert.match(calls[1].url, /api\.igdb\.com\/v4\/games$/);
+  assert.equal(calls[1].options.body, 'fields name;');
+  assert.match(calls[1].options.headers.Authorization, /^Bearer tok$/);
+  assert.equal(calls[1].options.signal instanceof AbortSignal, true);
 });
 
 test('client refreshes the token after a 401 and retries', async () => {
@@ -181,17 +186,111 @@ test('client refreshes the token after a 401 and retries', async () => {
     () => json(200, { access_token: 'new', expires_in: 3600 }),
     () => json(200, [{ id: 9 }]),
   ]);
-  const client = new IgdbClient({ clientId: 'id', clientSecret: 's', fetchImpl: impl, sleep: async () => {}, minIntervalMs: 0 });
+  const client = new IgdbClient({ clientId: 'test-client-id', clientSecret: 'test-client-secret', fetchImpl: impl });
   assert.deepEqual(await client.query('games', 'x'), [{ id: 9 }]);
 });
 
-test('client maps upstream failures to UPSTREAM_ERROR and reports missing credentials', async () => {
-  const { impl } = fakeFetch([() => json(200, { access_token: 't', expires_in: 3600 }), () => json(500, {})]);
-  const client = new IgdbClient({ clientId: 'id', clientSecret: 's', fetchImpl: impl, sleep: async () => {}, minIntervalMs: 0 });
-  await assert.rejects(() => client.query('games', 'x'), (e) => e.code === 'UPSTREAM_ERROR');
+test('client rejects OAuth and IGDB HTTP failures without exposing upstream bodies', async () => {
+  const oauth = new IgdbClient({
+    clientId: 'test-client-id',
+    clientSecret: 'test-client-secret',
+    fetchImpl: async () => json(401, { message: 'upstream detail' }),
+  });
+  await assert.rejects(() => oauth.query('games', 'x'), (error) => {
+    assert.equal(error.code, 'UPSTREAM_ERROR');
+    assert.equal(error.message.includes('upstream detail'), false);
+    return true;
+  });
 
-  const unconfigured = new IgdbClient({ clientId: null, clientSecret: null });
-  await assert.rejects(() => unconfigured.query('games', 'x'), (e) => e.code === 'UPSTREAM_NOT_CONFIGURED');
+  const { impl } = fakeFetch([
+    () => json(200, { access_token: 'tok', expires_in: 3600 }),
+    () => json(500, { message: 'upstream detail' }),
+  ]);
+  const igdb = new IgdbClient({ clientId: 'test-client-id', clientSecret: 'test-client-secret', fetchImpl: impl });
+  await assert.rejects(() => igdb.query('games', 'x'), (error) => error.code === 'UPSTREAM_ERROR');
+});
+
+test('client rejects malformed or unexpected OAuth and IGDB responses', async () => {
+  const malformedOAuth = new IgdbClient({
+    clientId: 'test-client-id',
+    clientSecret: 'test-client-secret',
+    fetchImpl: async () => ({ ok: true, json: async () => { throw new SyntaxError('invalid JSON'); } }),
+  });
+  await assert.rejects(() => malformedOAuth.query('games', 'x'), (error) => error.code === 'UPSTREAM_ERROR');
+
+  const invalidOAuth = new IgdbClient({
+    clientId: 'test-client-id',
+    clientSecret: 'test-client-secret',
+    fetchImpl: async () => json(200, { access_token: '', expires_in: 3600 }),
+  });
+  await assert.rejects(() => invalidOAuth.query('games', 'x'), (error) => error.code === 'UPSTREAM_ERROR');
+
+  let malformedCalls = 0;
+  const malformedIgdb = new IgdbClient({
+    clientId: 'test-client-id',
+    clientSecret: 'test-client-secret',
+    fetchImpl: async () => {
+      malformedCalls += 1;
+      return malformedCalls === 1
+        ? json(200, { access_token: 'tok', expires_in: 3600 })
+        : { ok: true, json: async () => { throw new SyntaxError('invalid JSON'); } };
+    },
+  });
+  await assert.rejects(() => malformedIgdb.query('games', 'x'), (error) => error.code === 'UPSTREAM_ERROR');
+
+  let unexpectedCalls = 0;
+  const unexpectedIgdb = new IgdbClient({
+    clientId: 'test-client-id',
+    clientSecret: 'test-client-secret',
+    fetchImpl: async () => {
+      unexpectedCalls += 1;
+      return json(200, unexpectedCalls === 1
+        ? { access_token: 'tok', expires_in: 3600 }
+        : { games: [] });
+    },
+  });
+  await assert.rejects(() => unexpectedIgdb.query('games', 'x'), (error) => error.code === 'UPSTREAM_ERROR');
+});
+
+test('client rejects missing or invalid configuration without making requests', async () => {
+  let calls = 0;
+  const fetchImpl = async () => { calls += 1; };
+  for (const config of [
+    { clientId: null, clientSecret: null, fetchImpl },
+    { clientId: 'test-client-id', clientSecret: '', fetchImpl },
+    { clientId: 'test-client-id', clientSecret: 'test-client-secret', fetchImpl: null },
+    { clientId: 'test-client-id', clientSecret: 'test-client-secret', fetchImpl, timeoutMs: 0 },
+  ]) {
+    const client = new IgdbClient(config);
+    await assert.rejects(() => client.query('games', 'x'), (error) => error.code === 'UPSTREAM_NOT_CONFIGURED');
+  }
+  assert.equal(calls, 0);
+});
+
+test('client maps network failures and timeouts to upstream errors', async () => {
+  const networkFailure = new IgdbClient({
+    clientId: 'test-client-id',
+    clientSecret: 'test-client-secret',
+    fetchImpl: async () => { throw new Error('network unavailable'); },
+  });
+  await assert.rejects(() => networkFailure.query('games', 'x'), (error) => error.code === 'UPSTREAM_ERROR');
+
+  const timeout = new IgdbClient({
+    clientId: 'test-client-id',
+    clientSecret: 'test-client-secret',
+    timeoutMs: 5,
+    fetchImpl: async (_url, options) => new Promise((_resolve, reject) => {
+      options.signal.addEventListener('abort', () => {
+        const error = new Error('aborted');
+        error.name = 'AbortError';
+        reject(error);
+      }, { once: true });
+    }),
+  });
+  await assert.rejects(
+    () => timeout.query('games', 'x'),
+    (error) => error.code === 'UPSTREAM_ERROR' && /timed out/i.test(error.message)
+  );
 });
 
 test('TtlCache expires entries', () => {

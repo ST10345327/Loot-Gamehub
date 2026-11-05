@@ -20,8 +20,25 @@ class ScreenRoutesTest {
     }
 
     @Test
-    fun bottomBar_hasFiveTabs() {
-        assertEquals(5, bottomBarRoutes.size)
+    fun settings_keepsBottomNavigationAvailable() {
+        assertTrue(Screen.Settings.route in bottomBarRoutes)
+    }
+
+    @Test
+    fun authenticatedDestinations_keepBottomNavigationAvailable() {
+        assertTrue(shouldShowBottomNavigation(Screen.Settings.route))
+        assertTrue(shouldShowBottomNavigation(Screen.GameDetails.createRoute(12)))
+        assertTrue(shouldShowBottomNavigation(Screen.Compare.createRoute(12)))
+        assertTrue(shouldShowBottomNavigation(Screen.SurpriseMe.route))
+    }
+
+    @Test
+    fun publicDestinations_hideBottomNavigation() {
+        assertFalse(shouldShowBottomNavigation(Screen.Splash.route))
+        assertFalse(shouldShowBottomNavigation(Screen.Onboarding.route))
+        assertFalse(shouldShowBottomNavigation(Screen.Login.route))
+        assertFalse(shouldShowBottomNavigation(Screen.Register.route))
+        assertFalse(shouldShowBottomNavigation(null))
     }
 
     @Test
@@ -36,11 +53,6 @@ class ScreenRoutesTest {
         authScreens.forEach { screen ->
             assertFalse("${screen.route} must hide the bottom bar", screen.route in bottomBarRoutes)
         }
-    }
-
-    @Test
-    fun settings_isNotATab() {
-        assertFalse(Screen.Settings.route in bottomBarRoutes)
     }
 
     @Test

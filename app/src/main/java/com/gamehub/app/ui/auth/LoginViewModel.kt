@@ -81,6 +81,25 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
+    fun signInWithGoogle(idToken: String) {
+        val current = _uiState.value
+        if (current.isLoading) return
+
+        _uiState.update { it.copy(isLoading = true, error = null) }
+        viewModelScope.launch {
+            when (val result = authRepository.signInWithGoogle(idToken)) {
+                is ApiResult.Success -> {
+                    AppLogger.debug("Google sign-in succeeded")
+                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+                }
+                is ApiResult.Failure -> {
+                    AppLogger.warn("Google sign-in failed: ${result.error}")
+                    _uiState.update { it.copy(isLoading = false, error = result.error) }
+                }
+            }
+        }
+    }
+
     // ---- Forgot password dialog -------------------------------------------------------
 
     fun openForgotPassword() {

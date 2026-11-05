@@ -5,6 +5,7 @@ import com.gamehub.app.data.remote.ApiError
 import com.gamehub.app.data.remote.ApiResult
 import com.gamehub.app.testing.FakeLibraryRepository
 import com.gamehub.app.testing.MainDispatcherRule
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -71,5 +72,21 @@ class LibraryViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isLoading)
         assertEquals(ApiError.NoConnection, state.error)
+    }
+
+    @Test
+    fun refresh_reloadsLibraryAndSkipsWhileRequestIsInFlight() = runTest {
+        repository.libraryGate = CompletableDeferred()
+        val viewModel = createViewModel()
+        assertTrue(viewModel.uiState.value.isLoading)
+
+        viewModel.refresh()
+        assertEquals(1, repository.getLibraryCalls.size)
+
+        repository.libraryGate?.complete(Unit)
+        assertFalse(viewModel.uiState.value.isLoading)
+        repository.libraryGate = null
+        viewModel.refresh()
+        assertEquals(2, repository.getLibraryCalls.size)
     }
 }

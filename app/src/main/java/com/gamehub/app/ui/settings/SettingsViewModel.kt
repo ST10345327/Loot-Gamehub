@@ -26,6 +26,17 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
         viewModelScope.launch { repository.setLanguage(language) }
     }
 
+    fun setNotificationsEnabled(enabled: Boolean) {
+        viewModelScope.launch { repository.setNotificationsEnabled(enabled) }
+    }
+
+    fun setWishlistAlerts(enabled: Boolean) {
+        viewModelScope.launch { repository.setWishlistAlerts(enabled) }
+    }
+
+    fun setReleaseAlerts(enabled: Boolean) {
+        viewModelScope.launch { repository.setReleaseAlerts(enabled) }
+    }
 
     init {
         viewModelScope.launch {

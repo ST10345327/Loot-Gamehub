@@ -17,6 +17,8 @@ import com.gamehub.app.data.repository.GameRepository
 import com.gamehub.app.data.repository.GameRepositoryImpl
 import com.gamehub.app.data.repository.LibraryRepository
 import com.gamehub.app.data.repository.LibraryRepositoryImpl
+import com.gamehub.app.data.repository.NotificationRepository
+import com.gamehub.app.data.repository.NotificationRepositoryImpl
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
@@ -31,7 +33,6 @@ class AppContainer(context: Context) {
     private val sessionStore = SessionStore(appContext.gameHubDataStore)
 
     private val settingsStore = SettingsStore(appContext.gameHubDataStore)
-    val settingsRepository: SettingsRepository = SettingsRepositoryImpl(settingsStore)
     private val apiCaller = ApiCaller(onSessionExpired = { sessionStore.clear() })
     private val okHttpClient: OkHttpClient = buildOkHttpClient()
 
@@ -42,7 +43,9 @@ class AppContainer(context: Context) {
         .build()
         .create(LootApi::class.java)
 
-    val authRepository: AuthRepository = AuthRepositoryImpl(api, apiCaller, sessionStore)
+    val settingsRepository: SettingsRepository = SettingsRepositoryImpl(settingsStore, api, apiCaller)
+    val notificationRepository: NotificationRepository = NotificationRepositoryImpl(api, apiCaller)
+    val authRepository: AuthRepository = AuthRepositoryImpl(api, apiCaller, sessionStore, notificationRepository)
 
     val gameRepository: GameRepository = GameRepositoryImpl(
         api = api,
@@ -56,7 +59,7 @@ class AppContainer(context: Context) {
         val builder = OkHttpClient.Builder()
             // Free hosting tiers "sleep" when idle; waking up can take close to a minute.
             .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)
             .addInterceptor(AuthInterceptor { sessionStore.token() })
 
         val isDebuggable = (appContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0

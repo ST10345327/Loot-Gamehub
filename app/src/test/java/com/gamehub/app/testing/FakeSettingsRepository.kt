@@ -18,4 +18,16 @@ class FakeSettingsRepository : SettingsRepository {
     override suspend fun setLanguage(language: AppLanguage) {
         _settings.value = _settings.value.copy(language = language)
     }
+
+    override suspend fun setNotificationsEnabled(enabled: Boolean) {
+        _settings.value = _settings.value.copy(notificationsEnabled = enabled)
+    }
+
+    override suspend fun setWishlistAlerts(enabled: Boolean) {
+        _settings.value = _settings.value.copy(wishlistAlerts = enabled)
+    }
+
+    override suspend fun setReleaseAlerts(enabled: Boolean) {
+        _settings.value = _settings.value.copy(releaseAlerts = enabled)
+    }
 }

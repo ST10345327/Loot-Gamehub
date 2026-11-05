@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <ImageButton android:id="@+id/surprise_back" android:layout_width="56dp" android:layout_height="56dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/common_back" android:src="@android:drawable/ic_media_previous" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_surprise_title" android:textAppearance="?attr/textAppearanceHeadline6" />
+    </LinearLayout>
+    <Spinner android:id="@+id/surprise_genre" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginStart="20dp" android:layout_marginEnd="20dp" />
+    <Spinner android:id="@+id/surprise_platform" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginStart="20dp" android:layout_marginEnd="20dp" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="20dp">
+        <LinearLayout
+            android:id="@+id/surprise_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView android:id="@+id/surprise_cover" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:contentDescription="@string/app_name" android:scaleType="fitCenter" />
+            <TextView android:id="@+id/surprise_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:textAppearance="?attr/textAppearanceHeadline5" android:textStyle="bold" />
+            <TextView android:id="@+id/surprise_metadata" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" />
+            <Button android:id="@+id/surprise_details" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="16dp" android:text="@string/surprise_view_details" />
+            <Button android:id="@+id/surprise_another" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="8dp" android:text="@string/surprise_try_another" />
+        </LinearLayout>
+        <ProgressBar android:id="@+id/surprise_progress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:visibility="gone" />
+        <TextView android:id="@+id/surprise_error" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center" android:gravity="center" android:textColor="?attr/colorError" android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>

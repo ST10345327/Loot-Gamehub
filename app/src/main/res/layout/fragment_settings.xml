@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_title"
+            android:textAppearance="?attr/textAppearanceHeadline5" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="@string/settings_appearance" android:textAppearance="?attr/textAppearanceSubtitle1" />
+        <RadioGroup
+            android:id="@+id/settings_theme"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <RadioButton android:id="@+id/theme_system" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/theme_system" />
+            <RadioButton android:id="@+id/theme_light" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/theme_light" />
+            <RadioButton android:id="@+id/theme_dark" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/theme_dark" />
+        </RadioGroup>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="@string/settings_language" android:textAppearance="?attr/textAppearanceSubtitle1" />
+        <RadioGroup
+            android:id="@+id/settings_language"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <RadioButton android:id="@+id/language_english" android:layout_width="match_parent" android:layout_height="48dp" android:text="English" />
+            <RadioButton android:id="@+id/language_tn" android:layout_width="match_parent" android:layout_height="48dp" android:text="Setswana" />
+            <RadioButton android:id="@+id/language_zu" android:layout_width="match_parent" android:layout_height="48dp" android:text="isiZulu" />
+        </RadioGroup>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="@string/settings_notifications" android:textAppearance="?attr/textAppearanceSubtitle1" />
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switch_notifications"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="@string/settings_notifications_toggle" />
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switch_wishlist_alerts"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="@string/settings_wishlist_alerts" />
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switch_release_alerts"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="@string/settings_release_alerts" />
+        <TextView android:id="@+id/settings_version" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" />
+    </LinearLayout>
+</ScrollView>

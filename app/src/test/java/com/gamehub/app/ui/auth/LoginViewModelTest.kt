@@ -108,4 +108,14 @@ class LoginViewModelTest {
         viewModel.dismissForgotPassword()
         assertNull(viewModel.uiState.value.forgotPassword)
     }
+
+    @Test
+    fun validGoogleToken_logsIn_andPassesTokenToRepository() {
+        val viewModel = createViewModel()
+        viewModel.signInWithGoogle("firebase-id-token-123")
+
+        assertTrue(viewModel.uiState.value.isLoggedIn)
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertEquals(listOf("firebase-id-token-123"), repository.googleLoginCalls)
+    }
 }

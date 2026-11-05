@@ -85,4 +85,20 @@ class GameDetailsViewModelTest {
 
         assertEquals(ApiError.NoConnection, viewModel.uiState.value.error)
     }
+
+    @Test
+    fun statusFailure_isExposedAndPreventsMutationsWithUnknownStatus() = runTest {
+        gameRepository.detailsResult = ApiResult.Success(FakeGameRepository.TEST_DETAILS)
+        gameRepository.statusResult = ApiResult.Failure(ApiError.NoConnection)
+
+        val viewModel = createViewModel()
+
+        assertEquals(FakeGameRepository.TEST_DETAILS, viewModel.uiState.value.details)
+        assertEquals(ApiError.NoConnection, viewModel.uiState.value.statusError)
+        viewModel.toggleFavourite()
+        viewModel.toggleWishlist()
+
+        assertTrue(libraryRepository.addFavoriteCalls.isEmpty())
+        assertTrue(libraryRepository.addWishlistCalls.isEmpty())
+    }
 }

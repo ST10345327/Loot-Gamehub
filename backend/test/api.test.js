@@ -4,9 +4,11 @@
  * End-to-end API tests against a REAL MySQL/MariaDB database (IGDB is replaced by a fake).
  * They are skipped unless a test database is configured, e.g.:
  *
- *   TEST_DB_HOST=127.0.0.1 TEST_DB_USER=gh TEST_DB_PASSWORD=ghpass TEST_DB_NAME=gamehub_test npm test
+ * Configure TEST_DB_* to a dedicated database whose name ends in "_test", and set
+ * TEST_DB_ALLOW_RESET=true to confirm that this suite may drop and recreate its tables.
  *
- * WARNING: the tables in that database are dropped and recreated on every run.
+ * WARNING: the tables in that database are dropped and recreated on every run. Never point
+ * these variables at a development or production database.
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -52,6 +54,21 @@ async function register(username, email = `${username}@example.com`, password = 
 
 test.before(async () => {
   if (skip) return;
+  const required = ['TEST_DB_USER', 'TEST_DB_NAME'];
+  const missing = required.filter((name) => !process.env[name]);
+  if (missing.length > 0) {
+    throw new Error(`Database integration tests need ${missing.join(' and ')} when TEST_DB_HOST is set.`);
+  }
+  if (!/_tests?$/i.test(process.env.TEST_DB_NAME)) {
+    throw new Error('Refusing destructive test setup: TEST_DB_NAME must end in "_test" or "_tests".');
+  }
+  if (process.env.TEST_DB_ALLOW_RESET !== 'true') {
+    throw new Error('Refusing destructive test setup: set TEST_DB_ALLOW_RESET=true for a dedicated test database.');
+  }
+  if (process.env.DB_NAME && process.env.DB_NAME === process.env.TEST_DB_NAME) {
+    throw new Error('Refusing destructive test setup: TEST_DB_NAME must differ from DB_NAME.');
+  }
+
   const dbConfig = {
     host: process.env.TEST_DB_HOST,
     port: Number(process.env.TEST_DB_PORT) || 3306,

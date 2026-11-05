@@ -18,6 +18,7 @@ fun ApiError.messageRes(): Int = when (this) {
     ApiError.NotFound -> R.string.error_not_found
     ApiError.RateLimited -> R.string.error_rate_limited
     ApiError.GameServiceUnavailable -> R.string.error_service_unavailable
+    ApiError.SecureSessionUnavailable -> R.string.error_secure_session_storage
     is ApiError.Validation -> R.string.error_validation
     is ApiError.Server -> R.string.error_server
     ApiError.Unknown -> R.string.error_unknown

@@ -1,6 +1,8 @@
 package com.gamehub.app.ui.search
 
 import com.gamehub.app.data.model.GenreFilter
+import com.gamehub.app.data.model.SearchFilters
+import com.gamehub.app.data.model.PlatformFilter
 import com.gamehub.app.data.remote.ApiError
 import com.gamehub.app.data.remote.ApiResult
 import com.gamehub.app.testing.FakeGameRepository
@@ -90,5 +92,17 @@ class SearchViewModelTest {
         viewModel.clearFilters()
 
         assertNull(viewModel.uiState.value.filters.genre)
+    }
+
+    @Test
+    fun setFilters_appliesAllValuesInOneSearch() = runTest {
+        val viewModel = createViewModel()
+        val filters = SearchFilters(genre = GenreFilter.RPG, platform = PlatformFilter.PS5, minRating = 8)
+
+        viewModel.setFilters(filters)
+
+        assertEquals(filters, viewModel.uiState.value.filters)
+        assertEquals(1, repository.searchCalls.size)
+        assertEquals(filters, repository.searchCalls.single().second)
     }
 }

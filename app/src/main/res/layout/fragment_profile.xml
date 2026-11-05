@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/profile_title" android:textAppearance="?attr/textAppearanceHeadline5" android:textStyle="bold" />
+    <TextView android:id="@+id/profile_username" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:textAppearance="?attr/textAppearanceHeadline6" />
+    <TextView android:id="@+id/profile_email" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textAppearance="?attr/textAppearanceBody1" />
+    <Button android:id="@+id/profile_notifications" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="24dp" android:text="@string/profile_notifications" />
+    <Button android:id="@+id/profile_settings" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="12dp" android:text="@string/settings_title" />
+    <Space android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <Button android:id="@+id/profile_sign_out" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="56dp" android:text="@string/settings_sign_out" />
+</LinearLayout>

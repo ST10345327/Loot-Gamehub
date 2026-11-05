@@ -22,6 +22,7 @@
     <string name="onboarding_body_2">Boloka metshameko mme o latele e o batlang go e tshameka, e o e tshamekang le e o e feditseng.</string>
     <string name="onboarding_title_3">Bapisa, boloka mme o fitlhele</string>
     <string name="onboarding_body_3">Bapisa metshameko e le pedi, kgotsa o letle Nkgakgamatse e go kgethele motshameko o o latelang.</string>
+    <string name="onboarding_page_description">Tsebe %1$d ya %2$d</string>
 
     <string name="auth_welcome_back">Re a go amogela gape</string>
     <string name="auth_sign_in_subtitle">Tsena mo akhaonteng ya gago ya Loot - Gamehub</string>
@@ -39,6 +40,8 @@
     <string name="auth_show_password">Bontsha lefoko la sephiri</string>
     <string name="auth_hide_password">Fitlha lefoko la sephiri</string>
     <string name="auth_password_hint">Ditlhaka di le 8 kgotsa go feta, go akaretsa nomoro.</string>
+    <string name="auth_sign_in_google">Tsena ka Google</string>
+    <string name="default_web_client_id">placeholder-client-id.apps.googleusercontent.com</string>
 
     <string name="forgot_title">Baya lefoko la sephiri gape</string>
     <string name="forgot_body">Kwala imeile ya gago mme re tla go romela ditaelo tsa go le baya gape.</string>
@@ -70,6 +73,7 @@
     <string name="error_not_found">Ga re a bona seo.</string>
     <string name="error_rate_limited">Maiteko a le mantsi thata. Tsweetswee ema gannye o bo o leka gape.</string>
     <string name="error_service_unavailable">Tirelo ya metshameko ga e yo ka nako eno. Leka gape moragonyana.</string>
+    <string name="error_secure_session_storage">Polokelo e e sireletsegileng ya nako ya gago ga e yo. Nako ya gago e e bolokilweng ga e a phimolwa.</string>
     <string name="error_validation">Tsweetswee tlhola dintlha tse o di kwadileng.</string>
     <string name="error_server">Go nnile le bothata kwa thoko ya rona. Tsweetswee leka gape.</string>
     <string name="error_unknown">Go nnile le bothata. Tsweetswee leka gape.</string>
@@ -85,6 +89,7 @@
     <string name="search_title">Batla</string>
     <string name="search_hint">Batla motshameko…</string>
     <string name="search_filters">Disefo</string>
+    <string name="search_filters_count">Disefo (%1$d)</string>
     <string name="search_no_results">Ga go na metshameko e e fitlhetsweng.</string>
     <string name="search_browse_genre">Sekaseka ka mofuta</string>
     <string name="search_genre">Mofuta</string>
@@ -122,11 +127,19 @@
     <string name="wishlist_move_to_library">Isa mo laeborari</string>
 
     <string name="details_favourite">E e ratwang</string>
+    <string name="details_add_favourite">Tsenya mo tse di ratwang</string>
+    <string name="details_remove_favourite">Tlosa se se ratwang</string>
     <string name="details_wishlist">Ditakatso</string>
+    <string name="details_add_wishlist">Tsenya mo ditatakweng</string>
+    <string name="details_remove_wishlist">Tlosa mo ditatakweng</string>
+    <string name="details_remove_from_library">Tlosa mo laeboraring</string>
     <string name="details_developer">Modiri</string>
     <string name="details_publisher">Mogatisi</string>
     <string name="details_similar_games">Metshameko e e tshwanang</string>
+    <string name="details_screenshots">Ditshwantsho tsa motshameko</string>
     <string name="details_compare">Bapisa</string>
+    <string name="game_cover_description">Setshwantsho sa motshameko wa %1$s</string>
+    <string name="game_screenshot_description">Setshwantsho sa motshameko</string>
 
     <string name="compare_title">Bapisa Metshameko</string>
     <string name="compare_select_game_a">Kgetha motshameko wa ntlha</string>
@@ -154,4 +167,11 @@
     <string name="settings_about">Ka ga</string>
     <string name="settings_sign_out">Tswa</string>
     <string name="settings_version">Kgatiso %1$s</string>
+    <string name="notifications_title">Dikitsiso</string>
+    <string name="notifications_mark_all_read">Tshwaya tsotlhe di badile</string>
+    <string name="notifications_empty">Ga o na dikitsiso</string>
+    <string name="profile_notifications">Dikitsiso</string>
+    <string name="settings_notifications_toggle">Bula dikitsiso</string>
+    <string name="settings_wishlist_alerts">Dikitsiso tsa tse o di batlang</string>
+    <string name="settings_release_alerts">Dikitsiso tsa metshameko e mesha</string>
 </resources>

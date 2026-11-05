@@ -24,6 +24,7 @@ data class GameDetailsUiState(
     val details: GameDetails? = null,
     val status: GameStatus = GameStatus(),
     val error: ApiError? = null,
+    val statusError: ApiError? = null,
     /** True while a favourite/wishlist/library tap is in flight, to stop double taps. */
     val isUpdating: Boolean = false
 )
@@ -49,7 +50,17 @@ class GameDetailsViewModel(
 
             when (detailsResult) {
                 is ApiResult.Success -> _uiState.update {
-                    it.copy(isLoading = false, details = detailsResult.data, status = (statusResult as? ApiResult.Success)?.data ?: GameStatus())
+                    val loadedStatus = statusResult as? ApiResult.Success
+                    val failedStatus = statusResult as? ApiResult.Failure
+                    if (failedStatus != null) {
+                        AppLogger.warn("Game status failed to load: ${failedStatus.error}")
+                    }
+                    it.copy(
+                        isLoading = false,
+                        details = detailsResult.data,
+                        status = loadedStatus?.data ?: GameStatus(),
+                        statusError = failedStatus?.error
+                    )
                 }
                 is ApiResult.Failure -> {
                     AppLogger.warn("Game details failed to load: ${detailsResult.error}")
@@ -60,8 +71,10 @@ class GameDetailsViewModel(
     }
 
     fun toggleFavourite() {
-        val details = _uiState.value.details ?: return
-        val currentlyFavourite = _uiState.value.status.isFavourite
+        val current = _uiState.value
+        if (current.statusError != null) return
+        val details = current.details ?: return
+        val currentlyFavourite = current.status.isFavourite
         runUpdate {
             val result = if (currentlyFavourite) libraryRepository.removeFavourite(gameId) else libraryRepository.addFavourite(details.game)
             if (result is ApiResult.Success) _uiState.update { it.copy(status = it.status.copy(isFavourite = !currentlyFavourite)) }
@@ -70,8 +83,10 @@ class GameDetailsViewModel(
     }
 
     fun toggleWishlist() {
-        val details = _uiState.value.details ?: return
-        val currentlyWishlisted = _uiState.value.status.isInWishlist
+        val current = _uiState.value
+        if (current.statusError != null) return
+        val details = current.details ?: return
+        val currentlyWishlisted = current.status.isInWishlist
         runUpdate {
             val result = if (currentlyWishlisted) libraryRepository.removeFromWishlist(gameId) else libraryRepository.addToWishlist(details.game)
             if (result is ApiResult.Success) _uiState.update { it.copy(status = it.status.copy(isInWishlist = !currentlyWishlisted)) }
@@ -81,7 +96,9 @@ class GameDetailsViewModel(
 
     /** Tapping the already-selected status removes the game from the library (status = null). */
     fun setLibraryStatus(status: LibraryStatus?) {
-        val details = _uiState.value.details ?: return
+        val current = _uiState.value
+        if (current.statusError != null) return
+        val details = current.details ?: return
         runUpdate {
             val result = if (status == null) libraryRepository.removeFromLibrary(gameId) else libraryRepository.saveToLibrary(details.game, status)
             if (result is ApiResult.Success) _uiState.update { it.copy(status = it.status.copy(libraryStatus = status)) }

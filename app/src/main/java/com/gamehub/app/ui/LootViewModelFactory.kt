@@ -20,7 +20,7 @@ import com.gamehub.app.ui.surprise.SurpriseMeViewModel
  * GameDetailsViewModel is built separately (see its own factory) because it needs the game id.
  */
 fun lootViewModelFactory(container: AppContainer): ViewModelProvider.Factory = viewModelFactory {
-    initializer { SessionViewModel(container.authRepository) }
+    initializer { SessionViewModel(container.authRepository, container.notificationRepository) }
     initializer { SplashViewModel(container.authRepository) }
     initializer { LoginViewModel(container.authRepository) }
     initializer { RegisterViewModel(container.authRepository) }

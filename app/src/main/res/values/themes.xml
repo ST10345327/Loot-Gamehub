@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.GameHub" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.GameHub" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/gamehub_red</item>
+        <item name="colorPrimaryVariant">@color/gamehub_red_dark</item>
+        <item name="colorSecondary">@color/gamehub_red</item>
+    </style>
 </resources>

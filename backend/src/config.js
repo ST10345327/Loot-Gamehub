@@ -39,6 +39,7 @@ function loadConfig(env = process.env) {
       clientId: env.IGDB_CLIENT_ID || null,
       clientSecret: env.IGDB_CLIENT_SECRET || null,
     }),
+    jobSecret: env.JOB_SECRET || null,
   });
 }
 

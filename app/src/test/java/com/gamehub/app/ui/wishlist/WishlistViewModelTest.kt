@@ -54,6 +54,18 @@ class WishlistViewModelTest {
     }
 
     @Test
+    fun refresh_reloadsFavorites() = runTest {
+        val viewModel = createViewModel()
+        val favorites = listOf(FakeLibraryRepository.TEST_SAVED_GAME.copy(gameId = 3))
+        repository.favoritesResult = ApiResult.Success(favorites)
+
+        viewModel.refresh()
+        viewModel.selectTab(WishlistTab.FAVOURITES)
+
+        assertEquals(favorites, viewModel.uiState.value.visibleGames)
+    }
+
+    @Test
     fun moveToLibrary_removesFromWishlist() = runTest {
         val game = FakeLibraryRepository.TEST_SAVED_GAME
         repository.wishlistResult = ApiResult.Success(listOf(game))

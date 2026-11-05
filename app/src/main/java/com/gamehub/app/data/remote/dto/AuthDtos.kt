@@ -12,6 +12,8 @@ data class LoginRequest(val email: String, val password: String)
 
 data class ForgotPasswordRequest(val email: String)
 
+data class GoogleLoginRequest(val idToken: String)
+
 data class MessageResponse(val message: String? = null)
 
 data class UserDto(
@@ -27,3 +29,11 @@ data class AuthResponse(val token: String? = null, val user: UserDto? = null)
 data class ErrorResponse(val error: ErrorBody? = null)
 
 data class ErrorBody(val code: String? = null, val message: String? = null)
+
+data class SettingsRequest(
+    val preferredLanguage: String? = null,
+    val themePreference: String? = null,
+    val notificationsEnabled: Boolean? = null,
+    val wishlistAlerts: Boolean? = null,
+    val releaseAlerts: Boolean? = null
+)
