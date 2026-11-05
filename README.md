@@ -38,7 +38,25 @@ Apart from being a platform for discovery, GameHub also lets its users create an
 
 ## Screenshots
 
-App screenshots will be added after they are uploaded.
+| Home | Login |
+| --- | --- |
+| <img src="screenshots/home.png" width="280" alt="GameHub home screen" /> | <img src="screenshots/login.png" width="280" alt="GameHub login screen" /> |
+
+| Registration | Search games |
+| --- | --- |
+| <img src="screenshots/registration.png" width="280" alt="GameHub registration screen" /> | <img src="screenshots/search%20game.png" width="280" alt="GameHub game search screen" /> |
+
+| Game details | Game comparison |
+| --- | --- |
+| <img src="screenshots/game%20details.png" width="280" alt="GameHub game details screen" /> | <img src="screenshots/game%20compare.png" width="280" alt="GameHub game comparison screen" /> |
+
+| Personal library | Wishlist |
+| --- | --- |
+| <img src="screenshots/personal%20library.png" width="280" alt="GameHub personal library screen" /> | <img src="screenshots/wishlist.png" width="280" alt="GameHub wishlist screen" /> |
+
+| Notifications | Settings |
+| --- | --- |
+| <img src="screenshots/notifications.png" width="280" alt="GameHub notifications screen" /> | <img src="screenshots/settings.png" width="280" alt="GameHub settings screen" /> |
 
 ## Architecture
 
