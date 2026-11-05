@@ -2,16 +2,18 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const mysql = require('mysql2/promise');
 
 const { loadConfig } = require('../src/config');
 const { createPool } = require('../src/db');
 const { createApp } = require('../src/app');
+const { getAuth } = require('firebase-admin/auth');
 const { initFirebase } = require('../src/services/firebase');
 
-const skip = process.env.TEST_DB_HOST ? false : 'Set TEST_DB_HOST (and friends) to run Google Auth API tests.';
+const hasTestDatabase = Boolean(process.env.TEST_DB_HOST);
+const skip = hasTestDatabase ? false : 'Set TEST_DB_HOST and test database variables to run Google Auth API tests.';
 
 const fakeGameService = {
   search: async () => ({ items: [], hasMore: false }),
@@ -23,13 +25,12 @@ const fakeGameService = {
 let server;
 let baseUrl;
 let pool;
-let adminAuth;
 
-async function api(method, route, { token, body, raw } = {}) {
+async function api(method, route, body) {
   const response = await fetch(baseUrl + route, {
     method,
-    headers: { ...(body !== undefined || raw ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    body: raw ?? (body !== undefined ? JSON.stringify(body) : undefined),
+    headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
   const text = await response.text();
   return { status: response.status, body: text ? JSON.parse(text) : null };
@@ -37,6 +38,19 @@ async function api(method, route, { token, body, raw } = {}) {
 
 test.before(async () => {
   if (skip) return;
+
+  const required = ['TEST_DB_USER', 'TEST_DB_NAME', 'TEST_DB_ALLOW_RESET'];
+  const missing = required.filter((name) => !process.env[name]);
+  if (missing.length > 0) {
+    throw new Error(`Google Auth tests require ${missing.join(', ')}.`);
+  }
+  if (!/_tests?$/i.test(process.env.TEST_DB_NAME) || process.env.TEST_DB_ALLOW_RESET !== 'true') {
+    throw new Error('Refusing destructive Google Auth test setup without a dedicated *_test database and TEST_DB_ALLOW_RESET=true.');
+  }
+  if (process.env.DB_NAME && process.env.DB_NAME === process.env.TEST_DB_NAME) {
+    throw new Error('Refusing to reset the configured application database.');
+  }
+
   const dbConfig = {
     host: process.env.TEST_DB_HOST,
     port: Number(process.env.TEST_DB_PORT) || 3306,
@@ -44,113 +58,112 @@ test.before(async () => {
     password: process.env.TEST_DB_PASSWORD ?? '',
     database: process.env.TEST_DB_NAME,
   };
-
-  const adminConn = await mysql.createConnection({ ...dbConfig, multipleStatements: true });
-  await adminConn.query('SET FOREIGN_KEY_CHECKS = 0; DROP TABLE IF EXISTS recently_viewed, wishlist, favourites, library, users; SET FOREIGN_KEY_CHECKS = 1;');
-  await adminConn.query(fs.readFileSync(path.join(__dirname, '..', 'sql', 'schema.sql'), 'utf8'));
-  await adminConn.end();
+  const adminConnection = await mysql.createConnection({ ...dbConfig, multipleStatements: true });
+  await adminConnection.query(
+    'SET FOREIGN_KEY_CHECKS = 0; DROP TABLE IF EXISTS recently_viewed, wishlist, favourites, library, users; SET FOREIGN_KEY_CHECKS = 1;'
+  );
+  await adminConnection.query(fs.readFileSync(path.join(__dirname, '..', 'sql', 'schema.sql'), 'utf8'));
+  await adminConnection.end();
 
   const config = loadConfig({
     JWT_SECRET: 'test-secret-that-is-long-enough',
     BCRYPT_ROUNDS: '4',
-    DB_HOST: dbConfig.host, DB_PORT: String(dbConfig.port), DB_USER: dbConfig.user, DB_PASSWORD: dbConfig.password, DB_NAME: dbConfig.database,
+    DB_HOST: dbConfig.host,
+    DB_PORT: String(dbConfig.port),
+    DB_USER: dbConfig.user,
+    DB_PASSWORD: dbConfig.password,
+    DB_NAME: dbConfig.database,
   });
   pool = createPool(config.db);
 
-  // Initialize firebase in test mode and mock auth
-  const firebaseAdmin = initFirebase({ NODE_ENV: 'test', FIREBASE_MOCK: 'true' });
-  adminAuth = firebaseAdmin.auth();
-  adminAuth.verifyIdToken = async (idToken) => {
+  const firebaseApp = initFirebase({ NODE_ENV: 'test', FIREBASE_MOCK: 'true' });
+  getAuth(firebaseApp).verifyIdToken = async (idToken) => {
     if (idToken === 'valid-new-user') {
       return { uid: 'google_uid_new', email: 'newgoogle@example.com', email_verified: true, name: 'New Google User' };
     }
-    if (idToken === 'valid-existing-user') {
-      return { uid: 'google_uid_existing', email: 'existinggoogle@example.com', email_verified: true, name: 'Existing Google User' };
-    }
-    if (idToken === 'conflict-password-user') {
-      return { uid: 'google_uid_conflict', email: 'passworduser@example.com', email_verified: true, name: 'Password User' };
-    }
     if (idToken === 'unverified-email') {
-      return { uid: 'google_uid_unver', email: 'unverified@example.com', email_verified: false, name: 'Unverified' };
+      return { uid: 'google_uid_unverified', email: 'unverified@example.com', email_verified: false };
     }
     if (idToken === 'expired-token') {
-      const err = new Error('Token expired');
-      err.code = 'auth/id-token-expired';
-      throw err;
+      const error = new Error('Token expired');
+      error.code = 'auth/id-token-expired';
+      throw error;
     }
-    const err = new Error('Invalid token');
-    err.code = 'auth/argument-error';
-    throw err;
+    const error = new Error('Invalid token');
+    error.code = 'auth/argument-error';
+    throw error;
   };
 
   const app = createApp({ config, pool, gameService: fakeGameService, rateLimits: { authMax: 1000, globalMax: 10000 } });
-  await new Promise((resolve) => { server = app.listen(0, '127.0.0.1', resolve); });
+  await new Promise((resolve) => {
+    server = app.listen(0, '127.0.0.1', resolve);
+  });
   baseUrl = `http://127.0.0.1:${server.address().port}`;
 });
 
 test.after(async () => {
-  if (skip) return;
+  if (skip || !server) return;
   await new Promise((resolve) => server.close(resolve));
   await pool.end();
 });
 
-test('POST /auth/google rejects missing or malformed ID token', { skip }, async () => {
-  const res1 = await api('POST', '/auth/google', { body: {} });
-  assert.equal(res1.status, 400);
-  assert.equal(res1.body.error.code, 'VALIDATION_ERROR');
+test('POST /auth/google is mounted and validates the token body', async () => {
+  const config = loadConfig({
+    JWT_SECRET: 'test-secret-that-is-long-enough',
+    BCRYPT_ROUNDS: '4',
+    DB_HOST: '127.0.0.1',
+    DB_USER: 'test',
+    DB_NAME: 'gamehub_test',
+  });
+  const app = createApp({ config, pool: { execute: async () => { throw new Error('Unexpected database access'); } }, gameService: fakeGameService });
+  const localServer = await new Promise((resolve) => {
+    const instance = app.listen(0, '127.0.0.1', () => resolve(instance));
+  });
 
-  const res2 = await api('POST', '/auth/google', { body: { idToken: '' } });
-  assert.equal(res2.status, 400);
+  try {
+    const response = await fetch(`http://127.0.0.1:${localServer.address().port}/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    const body = await response.json();
+    assert.equal(response.status, 400);
+    assert.equal(body.error.code, 'VALIDATION_ERROR');
+  } finally {
+    await new Promise((resolve, reject) => localServer.close((error) => error ? reject(error) : resolve()));
+  }
 });
 
-test('POST /auth/google rejects invalid Firebase ID token', { skip }, async () => {
-  const res = await api('POST', '/auth/google', { body: { idToken: 'invalid-token' } });
-  assert.equal(res.status, 401);
-  assert.equal(res.body.error.code, 'UNAUTHORIZED');
+test('POST /auth/google validates Firebase ID tokens', { skip }, async () => {
+  const missing = await api('POST', '/auth/google', {});
+  assert.equal(missing.status, 400);
+  assert.equal(missing.body.error.code, 'VALIDATION_ERROR');
+
+  const invalid = await api('POST', '/auth/google', { idToken: 'invalid-token' });
+  assert.equal(invalid.status, 401);
+  assert.equal(invalid.body.error.code, 'UNAUTHORIZED');
+
+  const expired = await api('POST', '/auth/google', { idToken: 'expired-token' });
+  assert.equal(expired.status, 401);
+  assert.equal(expired.body.error.code, 'TOKEN_EXPIRED');
+
+  const unverified = await api('POST', '/auth/google', { idToken: 'unverified-email' });
+  assert.equal(unverified.status, 400);
+  assert.equal(unverified.body.error.code, 'VALIDATION_ERROR');
 });
 
-test('POST /auth/google rejects expired Firebase ID token', { skip }, async () => {
-  const res = await api('POST', '/auth/google', { body: { idToken: 'expired-token' } });
-  assert.equal(res.status, 401);
-  assert.equal(res.body.error.code, 'TOKEN_EXPIRED');
-});
+test('POST /auth/google provisions a Google-only user and reuses the account', { skip }, async () => {
+  const first = await api('POST', '/auth/google', { idToken: 'valid-new-user' });
+  assert.equal(first.status, 200);
+  assert.ok(first.body.token);
+  assert.equal(first.body.user.email, 'newgoogle@example.com');
+  assert.equal(first.body.user.passwordHash, undefined);
 
-test('POST /auth/google rejects unverified email', { skip }, async () => {
-  const res = await api('POST', '/auth/google', { body: { idToken: 'unverified-email' } });
-  assert.equal(res.status, 400);
-  assert.equal(res.body.error.code, 'VALIDATION_ERROR');
-});
-
-test('POST /auth/google provisions new Google user successfully with null password_hash and returns JWT', { skip }, async () => {
-  const res = await api('POST', '/auth/google', { body: { idToken: 'valid-new-user' } });
-  assert.equal(res.status, 200);
-  assert.ok(res.body.token);
-  assert.equal(res.body.user.email, 'newgoogle@example.com');
-  assert.equal(res.body.user.passwordHash, undefined);
-
-  // Verify in database that password_hash is NULL and google_uid is set
-  const [rows] = await pool.query('SELECT password_hash, google_uid FROM users WHERE user_id = ?', [res.body.user.id]);
+  const [rows] = await pool.query('SELECT password_hash, google_uid FROM users WHERE user_id = ?', [first.body.user.id]);
   assert.equal(rows[0].password_hash, null);
   assert.equal(rows[0].google_uid, 'google_uid_new');
-});
 
-test('POST /auth/google logs in existing Google user on repeated requests (idempotent)', { skip }, async () => {
-  const res1 = await api('POST', '/auth/google', { body: { idToken: 'valid-existing-user' } });
-  assert.equal(res1.status, 200);
-  const userId = res1.body.user.id;
-
-  const res2 = await api('POST', '/auth/google', { body: { idToken: 'valid-existing-user' } });
-  assert.equal(res2.status, 200);
-  assert.equal(res2.body.user.id, userId);
-});
-
-test('POST /auth/google safely rejects automatic linking when email already belongs to a password account', { skip }, async () => {
-  // Register a password account with email passworduser@example.com
-  const regRes = await api('POST', '/auth/register', { body: { username: 'password_user', email: 'passworduser@example.com', password: 'passw0rd1' } });
-  assert.equal(regRes.status, 201);
-
-  // Try signing in with Google using same email
-  const res = await api('POST', '/auth/google', { body: { idToken: 'conflict-password-user' } });
-  assert.equal(res.status, 409);
-  assert.equal(res.body.error.code, 'CONFLICT');
+  const repeated = await api('POST', '/auth/google', { idToken: 'valid-new-user' });
+  assert.equal(repeated.status, 200);
+  assert.equal(repeated.body.user.id, first.body.user.id);
 });

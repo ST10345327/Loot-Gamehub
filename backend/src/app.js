@@ -15,7 +15,8 @@ const { createSavedGamesRouter, createWishlistRouter } = require('./routes/saved
 const { createRecentRouter } = require('./routes/recent');
 const { createNotificationsRouter, createFcmTokenRouter } = require('./routes/notifications');
 const { createNotificationService } = require('./services/notificationService');
-const { getMessaging } = require('./services/firebase');
+const { getMessaging } = require('firebase-admin/messaging');
+const { initFirebase } = require('./services/firebase');
 const { createJobsRouter } = require('./routes/jobs');
 
 const tooManyRequests = (req, res, next) =>
@@ -69,7 +70,8 @@ function createApp({ config, pool, gameService, rateLimits = {} }) {
 
   // Everything below needs a valid token.
   const protect = requireAuth(config);
-  const messaging = getMessaging();
+  const firebaseApp = initFirebase();
+  const messaging = firebaseApp ? getMessaging(firebaseApp) : null;
   const notificationService = createNotificationService({ pool, messaging });
   app.use('/me', protect, createMeRouter({ pool }), createFcmTokenRouter({ notificationService }));
   app.use('/games', protect, createGamesRouter({ gameService }));

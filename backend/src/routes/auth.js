@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const { asyncHandler, Errors } = require('../utils/errors');
 const { requireAuth, signToken } = require('../middleware/auth');
 const { toUserDto } = require('../utils/mappers');
+const { getAuth } = require('firebase-admin/auth');
 const { initFirebase } = require('../services/firebase');
 const {
   parseRegistration,
@@ -107,14 +108,14 @@ function createAuthRouter({ pool, config }) {
     '/google',
     asyncHandler(async (req, res) => {
       const { idToken } = parseGoogleLogin(req.body);
-      const admin = initFirebase(process.env);
-      if (!admin || typeof admin.auth !== 'function') {
+      const firebaseApp = initFirebase(process.env);
+      if (!firebaseApp) {
         throw Errors.internal('Firebase Auth is not configured on this server.');
       }
 
       let decodedToken;
       try {
-        decodedToken = await admin.auth().verifyIdToken(idToken);
+        decodedToken = await getAuth(firebaseApp).verifyIdToken(idToken);
       } catch (err) {
         throw err.code === 'auth/id-token-expired' ? Errors.tokenExpired() : Errors.unauthorized('Invalid Firebase ID token.');
       }
