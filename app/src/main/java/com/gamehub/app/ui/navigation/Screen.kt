@@ -11,6 +11,7 @@ sealed class Screen(val route: String) {
     data object Wishlist : Screen("wishlist")
     data object Profile : Screen("profile")
     data object Settings : Screen("settings")
+    data object Notifications : Screen("notifications")
     data object SurpriseMe : Screen("surprise")
     data object GameDetails : Screen("game/{gameId}") {
         fun createRoute(gameId: Int) = "game/$gameId"
@@ -18,18 +19,26 @@ sealed class Screen(val route: String) {
     data object Compare : Screen("compare/{firstGameId}") {
         fun createRoute(firstGameId: Int) = "compare/$firstGameId"
     }
+
+    companion object {
+        const val ARG_ROUTE = "route"
+    }
 }
 
 val allScreens: List<Screen> = listOf(
     Screen.Splash, Screen.Onboarding, Screen.Login, Screen.Register,
     Screen.Home, Screen.Search, Screen.Library, Screen.Wishlist,
-    Screen.Profile, Screen.Settings, Screen.SurpriseMe, Screen.GameDetails, Screen.Compare
+    Screen.Profile, Screen.Settings, Screen.Notifications, Screen.SurpriseMe, Screen.GameDetails, Screen.Compare
 )
 
 val bottomBarRoutes: Set<String> = setOf(
-    Screen.Home.route, Screen.Search.route, Screen.Library.route, Screen.Wishlist.route, Screen.Profile.route
+    Screen.Home.route, Screen.Search.route, Screen.Library.route, Screen.Wishlist.route,
+    Screen.Profile.route, Screen.Settings.route, Screen.Notifications.route
 )
 
 val publicRoutes: Set<String> = setOf(
     Screen.Splash.route, Screen.Onboarding.route, Screen.Login.route, Screen.Register.route
 )
+
+fun shouldShowBottomNavigation(route: String?): Boolean =
+    route != null && route !in publicRoutes

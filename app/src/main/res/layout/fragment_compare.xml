@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <ImageButton
+            android:id="@+id/compare_back"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/common_back"
+            android:src="@android:drawable/ic_media_previous" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/compare_title"
+            android:textAppearance="?attr/textAppearanceHeadline6" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:orientation="horizontal">
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1">
+                <ImageView android:id="@+id/compare_first_cover" android:layout_width="match_parent" android:layout_height="match_parent" android:contentDescription="@string/compare_select_game_a" android:scaleType="centerCrop" />
+                <TextView android:id="@+id/compare_first_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="bottom" android:background="#99000000" android:padding="8dp" android:textColor="@android:color/white" />
+                <ProgressBar android:id="@+id/compare_first_progress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:visibility="gone" />
+            </FrameLayout>
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1">
+                <ImageView android:id="@+id/compare_second_cover" android:layout_width="match_parent" android:layout_height="match_parent" android:contentDescription="@string/compare_select_game_b" android:scaleType="centerCrop" />
+                <TextView android:id="@+id/compare_second_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="bottom" android:background="#99000000" android:padding="8dp" android:textColor="@android:color/white" />
+                <ProgressBar android:id="@+id/compare_second_progress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:visibility="gone" />
+                <Button android:id="@+id/compare_pick" android:layout_width="match_parent" android:layout_height="match_parent" android:text="@string/compare_select_game_b" android:textAllCaps="false" />
+                <ImageButton android:id="@+id/compare_clear" android:layout_width="40dp" android:layout_height="40dp" android:layout_gravity="top|end" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/common_remove" android:src="@android:drawable/ic_menu_close_clear_cancel" android:visibility="gone" />
+            </FrameLayout>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/compare_error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:accessibilityLiveRegion="polite"
+            android:textColor="?attr/colorError"
+            android:visibility="gone" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/compare_rows"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            android:layout_weight="1" />
+    </LinearLayout>
+</LinearLayout>

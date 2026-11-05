@@ -39,6 +39,15 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun setNotificationsEnabled_updatesState() = runTest {
+        val viewModel = createViewModel()
+
+        viewModel.setNotificationsEnabled(false)
+
+        assertEquals(false, viewModel.uiState.value.notificationsEnabled)
+    }
+
+    @Test
     fun appLanguage_fromTag_returnsExpectedLanguage() {
         assertEquals(AppLanguage.ENGLISH, AppLanguage.fromTag("en"))
         assertEquals(AppLanguage.SETSWANA, AppLanguage.fromTag("tn"))

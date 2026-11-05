@@ -59,6 +59,11 @@ class SearchViewModel(private val gameRepository: GameRepository) : ViewModel() 
     fun onPeriodSelected(period: ReleasePeriod) = updateFilters { it.copy(period = period) }
     fun onSortSelected(sort: SortOption) = updateFilters { it.copy(sort = sort) }
     fun clearFilters() = updateFilters { SearchFilters() }
+    fun setFilters(filters: SearchFilters) {
+        _uiState.update { it.copy(filters = filters, showFilterSheet = false) }
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch { runSearch() }
+    }
 
     fun openFilterSheet() { _uiState.update { it.copy(showFilterSheet = true) } }
     fun closeFilterSheet() { _uiState.update { it.copy(showFilterSheet = false) } }

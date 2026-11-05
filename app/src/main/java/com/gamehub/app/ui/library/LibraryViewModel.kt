@@ -32,6 +32,9 @@ class LibraryViewModel(private val libraryRepository: LibraryRepository) : ViewM
     init { load() }
 
     fun retry() = load()
+    fun refresh() {
+        if (!_uiState.value.isLoading) load()
+    }
     fun selectFilter(status: LibraryStatus?) { _uiState.update { it.copy(selectedFilter = status) } }
 
     fun removeGame(gameId: Int) {

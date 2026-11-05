@@ -1,8 +1,10 @@
 package com.gamehub.app.data.remote
 
+import com.gamehub.app.data.local.SessionStorageException
 import com.gamehub.app.utils.AppLogger
 import java.io.IOException
 import java.net.SocketTimeoutException
+import javax.net.ssl.SSLException
 import kotlinx.coroutines.CancellationException
 import retrofit2.HttpException
 
@@ -29,6 +31,12 @@ class ApiCaller(private val onSessionExpired: suspend () -> Unit) {
         } catch (e: SocketTimeoutException) {
             AppLogger.warn("Request timed out")
             ApiResult.Failure(ApiError.Timeout)
+        } catch (e: SSLException) {
+            AppLogger.warn("Secure connection failed (${e.javaClass.simpleName})")
+            ApiResult.Failure(ApiError.Server(null))
+        } catch (e: SessionStorageException) {
+            AppLogger.error("Secure session storage is unavailable", e)
+            ApiResult.Failure(ApiError.SecureSessionUnavailable)
         } catch (e: IOException) {
             AppLogger.warn("Network problem: ${e.message}")
             ApiResult.Failure(ApiError.NoConnection)

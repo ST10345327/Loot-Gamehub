@@ -22,6 +22,7 @@
     <string name="onboarding_body_2">Londoloza imidlalo futhi ulandelele lena ofuna ukuyidlala, oyidlalayo nesiyiqedile.</string>
     <string name="onboarding_title_3">Qhathanisa, londoloza futhi uthole</string>
     <string name="onboarding_body_3">Qhathanisa imidlalo emibili, noma uvumele i-Ngimangaze ikukhethele umdlalo olandelayo.</string>
+    <string name="onboarding_page_description">Ikhasi %1$d kwangu-%2$d</string>
 
     <string name="auth_welcome_back">Siyakwamukela futhi</string>
     <string name="auth_sign_in_subtitle">Ngena ku-akhawunti yakho ye-Loot - Gamehub</string>
@@ -39,6 +40,8 @@
     <string name="auth_show_password">Bonisa iphasiwedi</string>
     <string name="auth_hide_password">Fihla iphasiwedi</string>
     <string name="auth_password_hint">Okungenani izinhlamvu ezingu-8, kuhlanganise nenombolo.</string>
+    <string name="auth_sign_in_google">Ngena nge-Google</string>
+    <string name="default_web_client_id">placeholder-client-id.apps.googleusercontent.com</string>
 
     <string name="forgot_title">Setha kabusha iphasiwedi yakho</string>
     <string name="forgot_body">Faka i-imeyili yakho sizokuthumelela iziqondiso zokusetha kabusha.</string>
@@ -70,6 +73,7 @@
     <string name="error_not_found">Asikutholanga lokho.</string>
     <string name="error_rate_limited">Imizamo eminingi kakhulu. Sicela ulinde isikhashana uphinde uzame.</string>
     <string name="error_service_unavailable">Isevisi yemidlalo ayitholakali okwamanje. Zama futhi kamuva.</string>
+    <string name="error_secure_session_storage">Isitoreji esivikelekile seseshini asitholakali. Imininingwane yeseshini yakho ayisuswanga.</string>
     <string name="error_validation">Sicela uhlole imininingwane oyifake.</string>
     <string name="error_server">Kukhona okungahambanga kahle ohlangothini lwethu. Sicela uzame futhi.</string>
     <string name="error_unknown">Kukhona okungahambanga kahle. Sicela uzame futhi.</string>
@@ -85,6 +89,7 @@
     <string name="search_title">Sesha</string>
     <string name="search_hint">Sesha umdlalo…</string>
     <string name="search_filters">Izihlungi</string>
+    <string name="search_filters_count">Izihlungi (%1$d)</string>
     <string name="search_no_results">Akukho midlalo etholakele.</string>
     <string name="search_browse_genre">Phequlula ngohlobo</string>
     <string name="search_genre">Uhlobo</string>
@@ -122,11 +127,19 @@
     <string name="wishlist_move_to_library">Yisa emtapweni</string>
 
     <string name="details_favourite">Okuthandwayo</string>
+    <string name="details_add_favourite">Engeza kokuthandwayo</string>
+    <string name="details_remove_favourite">Susa kokuthandwayo</string>
     <string name="details_wishlist">Izifiso</string>
+    <string name="details_add_wishlist">Engeza ohlwini lwezifiso</string>
+    <string name="details_remove_wishlist">Susa ohlwini lwezifiso</string>
+    <string name="details_remove_from_library">Susa emtapweni</string>
     <string name="details_developer">Umenzi</string>
     <string name="details_publisher">Umshicileli</string>
     <string name="details_similar_games">Imidlalo efanayo</string>
+    <string name="details_screenshots">Izithombe zesikrini</string>
     <string name="details_compare">Qhathanisa</string>
+    <string name="game_cover_description">Ikhava yomdlalo %1$s</string>
+    <string name="game_screenshot_description">Isithombe-skrini somdlalo</string>
 
     <string name="compare_title">Qhathanisa Imidlalo</string>
     <string name="compare_select_game_a">Khetha umdlalo wokuqala</string>
@@ -154,4 +167,11 @@
     <string name="settings_about">Mayelana</string>
     <string name="settings_sign_out">Phuma</string>
     <string name="settings_version">Inguqulo %1$s</string>
+    <string name="notifications_title">Izaziso</string>
+    <string name="notifications_mark_all_read">Maka konke kufundwe</string>
+    <string name="notifications_empty">Awunazaziso okwamanje</string>
+    <string name="profile_notifications">Izaziso</string>
+    <string name="settings_notifications_toggle">Nika amandla izaziso</string>
+    <string name="settings_wishlist_alerts">Izaziso zohlu lwezifiso</string>
+    <string name="settings_release_alerts">Izaziso zemidlalo emisha</string>
 </resources>

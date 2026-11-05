@@ -5,9 +5,8 @@ import androidx.core.os.LocaleListCompat
 import com.gamehub.app.data.model.AppLanguage
 
 /**
- * Applies the app's UI language using AppCompat's per-app language API. This works without
- * restarting the Activity — every stringResource() call recomposes with the new language
- * automatically.
+ * Applies the app's UI language using AppCompat's per-app language API. AppCompat recreates
+ * the Activity so Android resolves the XML-backed string resources in the selected locale.
  */
 object LocaleManager {
     fun applyLanguage(language: AppLanguage) {

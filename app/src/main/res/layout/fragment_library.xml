@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingTop="16dp">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="20dp" android:paddingEnd="20dp" android:text="@string/library_title" android:textAppearance="?attr/textAppearanceHeadline5" android:textStyle="bold" />
+    <TextView android:id="@+id/library_count" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="20dp" android:paddingEnd="20dp" />
+    <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:fillViewport="true">
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/library_filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            app:singleSelection="true"
+            app:selectionRequired="false" />
+    </HorizontalScrollView>
+    <ProgressBar android:id="@+id/library_progress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:visibility="gone" />
+    <TextView android:id="@+id/library_error" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:padding="16dp" android:textColor="?attr/colorError" android:visibility="gone" />
+    <Button android:id="@+id/library_retry" android:layout_width="wrap_content" android:layout_height="48dp" android:layout_gravity="center_horizontal" android:text="@string/common_retry" android:visibility="gone" />
+    <TextView android:id="@+id/library_empty" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:padding="32dp" android:text="@string/library_empty" android:visibility="gone" />
+    <androidx.recyclerview.widget.RecyclerView android:id="@+id/library_games" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipToPadding="false" android:paddingStart="16dp" android:paddingEnd="16dp" />
+</LinearLayout>

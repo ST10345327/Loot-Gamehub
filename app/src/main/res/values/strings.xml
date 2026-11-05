@@ -22,6 +22,7 @@
     <string name="onboarding_body_2">Save games and track what you want to play, are playing and have completed.</string>
     <string name="onboarding_title_3">Compare, save and discover</string>
     <string name="onboarding_body_3">Compare two games side by side, or let Surprise Me pick your next game.</string>
+    <string name="onboarding_page_description">Page %1$d of %2$d</string>
 
     <string name="auth_welcome_back">Welcome back</string>
     <string name="auth_sign_in_subtitle">Sign in to your Loot - Gamehub account</string>
@@ -39,6 +40,8 @@
     <string name="auth_show_password">Show password</string>
     <string name="auth_hide_password">Hide password</string>
     <string name="auth_password_hint">At least 8 characters, including a number.</string>
+    <string name="auth_sign_in_google">Sign in with Google</string>
+    <string name="default_web_client_id">placeholder-client-id.apps.googleusercontent.com</string>
 
     <string name="forgot_title">Reset your password</string>
     <string name="forgot_body">Enter your email and we\'ll send reset instructions.</string>
@@ -70,6 +73,7 @@
     <string name="error_not_found">We couldn\'t find that.</string>
     <string name="error_rate_limited">Too many attempts. Please wait a moment and try again.</string>
     <string name="error_service_unavailable">The game service is unavailable right now. Try again later.</string>
+    <string name="error_secure_session_storage">Secure session storage is unavailable. Your saved session has not been removed.</string>
     <string name="error_validation">Please check the details you entered.</string>
     <string name="error_server">Something went wrong on our side. Please try again.</string>
     <string name="error_unknown">Something went wrong. Please try again.</string>
@@ -85,6 +89,7 @@
     <string name="search_title">Search</string>
     <string name="search_hint">Search for a game…</string>
     <string name="search_filters">Filters</string>
+    <string name="search_filters_count">Filters (%1$d)</string>
     <string name="search_no_results">No games matched your search.</string>
     <string name="search_browse_genre">Browse by genre</string>
     <string name="search_genre">Genre</string>
@@ -122,11 +127,19 @@
     <string name="wishlist_move_to_library">Move to library</string>
 
     <string name="details_favourite">Favourite</string>
+    <string name="details_add_favourite">Add to favourites</string>
+    <string name="details_remove_favourite">Remove favourite</string>
     <string name="details_wishlist">Wishlist</string>
+    <string name="details_add_wishlist">Add to wishlist</string>
+    <string name="details_remove_wishlist">Remove from wishlist</string>
+    <string name="details_remove_from_library">Remove from library</string>
     <string name="details_developer">Developer</string>
     <string name="details_publisher">Publisher</string>
     <string name="details_similar_games">Similar games</string>
+    <string name="details_screenshots">Screenshots</string>
     <string name="details_compare">Compare</string>
+    <string name="game_cover_description">Cover art for %1$s</string>
+    <string name="game_screenshot_description">Game screenshot</string>
 
     <string name="compare_title">Compare Games</string>
     <string name="compare_select_game_a">Select first game</string>
@@ -154,4 +167,11 @@
     <string name="settings_about">About</string>
     <string name="settings_sign_out">Sign out</string>
     <string name="settings_version">Version %1$s</string>
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_mark_all_read">Mark all as read</string>
+    <string name="notifications_empty">No notifications yet</string>
+    <string name="profile_notifications">Notifications</string>
+    <string name="settings_notifications_toggle">Enable notifications</string>
+    <string name="settings_wishlist_alerts">Wishlist alerts</string>
+    <string name="settings_release_alerts">New release alerts</string>
 </resources>

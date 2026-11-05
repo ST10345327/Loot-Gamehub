@@ -160,6 +160,13 @@ function parseOptionalStatus(value) {
   return value;
 }
 
+function parseGoogleLogin(body = {}) {
+  if (!body || typeof body.idToken !== 'string' || body.idToken.trim().length === 0) {
+    throw Errors.validation({ idToken: 'Firebase ID token is required.' });
+  }
+  return { idToken: body.idToken.trim() };
+}
+
 module.exports = {
   LANGUAGES,
   THEMES,
@@ -174,4 +181,5 @@ module.exports = {
   parseGameId,
   parseSavedGame,
   parseOptionalStatus,
+  parseGoogleLogin,
 };

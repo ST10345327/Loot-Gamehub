@@ -14,10 +14,12 @@ class FakeAuthRepository : AuthRepository {
 
     var loginResult: ApiResult<User> = ApiResult.Success(TEST_USER)
     var registerResult: ApiResult<User> = ApiResult.Success(TEST_USER)
+    var googleLoginResult: ApiResult<User> = ApiResult.Success(TEST_USER)
     var forgotPasswordResult: ApiResult<Unit> = ApiResult.Success(Unit)
 
     val loginCalls = mutableListOf<Pair<String, String>>()
     val registerCalls = mutableListOf<Triple<String, String, String>>()
+    val googleLoginCalls = mutableListOf<String>()
     val forgotPasswordCalls = mutableListOf<String>()
 
     private val user = MutableStateFlow<User?>(null)
@@ -37,6 +39,11 @@ class FakeAuthRepository : AuthRepository {
     override suspend fun login(email: String, password: String): ApiResult<User> {
         loginCalls.add(email to password)
         return loginResult
+    }
+
+    override suspend fun signInWithGoogle(idToken: String): ApiResult<User> {
+        googleLoginCalls.add(idToken)
+        return googleLoginResult
     }
 
     override suspend fun forgotPassword(email: String): ApiResult<Unit> {

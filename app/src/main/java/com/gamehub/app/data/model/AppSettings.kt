@@ -22,5 +22,8 @@ enum class AppLanguage(val tag: String, val nativeName: String) {
 
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val language: AppLanguage = AppLanguage.ENGLISH
+    val language: AppLanguage = AppLanguage.ENGLISH,
+    val notificationsEnabled: Boolean = true,
+    val wishlistAlerts: Boolean = true,
+    val releaseAlerts: Boolean = true
 )

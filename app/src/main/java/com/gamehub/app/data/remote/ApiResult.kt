@@ -25,6 +25,7 @@ sealed interface ApiError {
     data object NotFound : ApiError
     data object RateLimited : ApiError
     data object GameServiceUnavailable : ApiError
+    data object SecureSessionUnavailable : ApiError
     data class Validation(val message: String?) : ApiError
     data class Server(val message: String?) : ApiError
     data object Unknown : ApiError

@@ -9,20 +9,40 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
+const { createSslOptions } = require('../src/db');
+
+function validateInitTarget(env) {
+  const required = ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
+  const missing = required.filter((name) => !env[name]);
+  if (missing.length > 0) {
+    throw new Error(`Missing required database configuration: ${missing.join(', ')}.`);
+  }
+  if (env.DB_SSL !== 'true' || !env.DB_SSL_CA_PATH) {
+    throw new Error('Database initialization requires DB_SSL=true and DB_SSL_CA_PATH.');
+  }
+  if (/^(localhost|127(?:\.\d{1,3}){0,3}|::1)$/i.test(env.DB_HOST)) {
+    throw new Error('Refusing to initialize a local database.');
+  }
+  const port = Number(env.DB_PORT);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error('DB_PORT must be a valid TCP port.');
+  }
+  if (env.DB_INIT_CONFIRM_HOST !== env.DB_HOST || env.DB_INIT_CONFIRM_DATABASE !== env.DB_NAME) {
+    throw new Error('Confirm the target by setting DB_INIT_CONFIRM_HOST and DB_INIT_CONFIRM_DATABASE to the intended values.');
+  }
+}
 
 async function main() {
+  validateInitTarget(process.env);
   const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_SSL } = process.env;
-  if (!DB_HOST || !DB_USER || !DB_NAME) {
-    throw new Error('Set DB_HOST, DB_USER and DB_NAME (and usually DB_PASSWORD) in backend/.env first.');
-  }
 
   const connection = await mysql.createConnection({
     host: DB_HOST,
-    port: Number(DB_PORT) || 3306,
+    port: Number(DB_PORT),
     user: DB_USER,
     password: DB_PASSWORD ?? '',
     database: DB_NAME,
-    ssl: DB_SSL === 'true' ? { rejectUnauthorized: true } : undefined,
+    ssl: createSslOptions({ ssl: DB_SSL === 'true' }),
     multipleStatements: true,
   });
 
@@ -36,7 +56,12 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('Database setup failed:', err.message);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    const code = typeof err?.code === 'string' ? ` (${err.code})` : '';
+    console.error(`Database setup failed${code}. Check database connectivity and configuration.`);
+    process.exit(1);
+  });
+}
+
+module.exports = { validateInitTarget };

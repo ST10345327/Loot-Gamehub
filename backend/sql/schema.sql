@@ -9,20 +9,24 @@
 -- and a game can only appear once per user per list (UNIQUE user_id + game_id).
 
 CREATE TABLE IF NOT EXISTS users (
-  user_id               INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  username              VARCHAR(30)  NOT NULL,
-  email                 VARCHAR(100) NOT NULL,
-  password_hash         VARCHAR(255) NOT NULL,            -- bcrypt hash, never the plain password
-  preferred_language    ENUM('en','tn','zu')              NOT NULL DEFAULT 'en',
-  theme_preference      ENUM('system','light','dark')     NOT NULL DEFAULT 'system',
-  notifications_enabled BOOLEAN      NOT NULL DEFAULT TRUE,
-  wishlist_alerts       BOOLEAN      NOT NULL DEFAULT TRUE,
-  release_alerts        BOOLEAN      NOT NULL DEFAULT TRUE,
-  created_at            DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_active           DATETIME     NULL,
+  user_id                   INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  username                  VARCHAR(30)  NOT NULL,
+  email                     VARCHAR(100) NOT NULL,
+  password_hash             VARCHAR(255) NULL,                -- bcrypt hash, or NULL for Google-only users
+  google_uid                VARCHAR(128) NULL,                -- Firebase UID for Google SSO
+  preferred_language        ENUM('en','tn','zu')              NOT NULL DEFAULT 'en',
+  theme_preference          ENUM('system','light','dark')     NOT NULL DEFAULT 'system',
+  notifications_enabled     BOOLEAN      NOT NULL DEFAULT TRUE,
+  wishlist_alerts           BOOLEAN      NOT NULL DEFAULT TRUE,
+  release_alerts            BOOLEAN      NOT NULL DEFAULT TRUE,
+  upcoming_reminders_enabled BOOLEAN     NOT NULL DEFAULT TRUE,
+  recommendations_enabled   BOOLEAN      NOT NULL DEFAULT TRUE,
+  created_at                DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_active               DATETIME     NULL,
   PRIMARY KEY (user_id),
   CONSTRAINT uq_users_email    UNIQUE (email),
-  CONSTRAINT uq_users_username UNIQUE (username)
+  CONSTRAINT uq_users_username UNIQUE (username),
+  CONSTRAINT uq_users_google_uid UNIQUE (google_uid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS library (
@@ -89,4 +93,27 @@ CREATE TABLE IF NOT EXISTS recently_viewed (
   PRIMARY KEY (view_id),
   CONSTRAINT uq_recent_user_game UNIQUE (user_id, game_id),
   CONSTRAINT fk_recent_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS fcm_tokens (
+  token_id    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id     INT UNSIGNED NOT NULL,
+  token       VARCHAR(255) NOT NULL,
+  updated_at  DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (token_id),
+  CONSTRAINT uq_fcm_token UNIQUE (token),
+  CONSTRAINT fk_fcm_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id     INT UNSIGNED NOT NULL,
+  type        VARCHAR(50)  NOT NULL,
+  title       VARCHAR(255) NOT NULL,
+  body        TEXT         NOT NULL,
+  game_id     INT UNSIGNED NULL,
+  is_read     BOOLEAN      NOT NULL DEFAULT FALSE,
+  created_at  DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (id),
+  CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

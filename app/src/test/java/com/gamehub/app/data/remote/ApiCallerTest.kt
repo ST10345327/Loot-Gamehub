@@ -1,7 +1,9 @@
 package com.gamehub.app.data.remote
 
+import com.gamehub.app.data.local.SessionStorageException
 import java.io.IOException
 import java.net.SocketTimeoutException
+import javax.net.ssl.SSLHandshakeException
 import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -56,7 +58,23 @@ class ApiCallerTest {
     }
 
     @Test
+    fun tlsFailure_isNotReportedAsNoConnection() = runTest {
+        assertEquals(
+            ApiResult.Failure(ApiError.Server(null)),
+            caller.call<Unit> { throw SSLHandshakeException("certificate verification failed") }
+        )
+    }
+
+    @Test
     fun anythingUnexpected_becomesUnknown_insteadOfCrashing() = runTest {
         assertEquals(ApiResult.Failure(ApiError.Unknown), caller.call<Unit> { throw IllegalStateException("bug") })
+    }
+
+    @Test
+    fun secureSessionStorageFailure_isReportedExplicitly() = runTest {
+        assertEquals(
+            ApiResult.Failure(ApiError.SecureSessionUnavailable),
+            caller.call<Unit> { throw SessionStorageException(IllegalStateException()) }
+        )
     }
 }

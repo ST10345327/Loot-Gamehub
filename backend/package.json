@@ -11,7 +11,9 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "db:init": "node scripts/init-db.js",
-    "test": "node --test"
+    "test": "node --test",
+    "test:unit": "node --test test/igdb.test.js test/validation.test.js",
+    "test:integration": "node --test test/api.test.js"
   },
   "license": "UNLICENSED",
   "dependencies": {
@@ -20,6 +22,7 @@
     "dotenv": "^16.6.1",
     "express": "^4.22.3",
     "express-rate-limit": "^7.5.1",
+    "firebase-admin": "^14.5.0",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.24.4"

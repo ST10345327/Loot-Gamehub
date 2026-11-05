@@ -1,25 +1,33 @@
 package com.gamehub.app.data.remote
 
 import com.gamehub.app.data.remote.dto.AuthResponse
+import com.gamehub.app.data.remote.dto.FcmTokenRequest
 import com.gamehub.app.data.remote.dto.ForgotPasswordRequest
+import com.gamehub.app.data.remote.dto.GoogleLoginRequest
 import com.gamehub.app.data.remote.dto.GameDetailsDto
 import com.gamehub.app.data.remote.dto.GameDto
 import com.gamehub.app.data.remote.dto.GameStatusDto
 import com.gamehub.app.data.remote.dto.LoginRequest
 import com.gamehub.app.data.remote.dto.MessageResponse
 import com.gamehub.app.data.remote.dto.MoveToLibraryRequest
+import com.gamehub.app.data.remote.dto.NotificationListDto
 import com.gamehub.app.data.remote.dto.RegisterRequest
 import com.gamehub.app.data.remote.dto.SavedGameDto
 import com.gamehub.app.data.remote.dto.SavedGameListDto
 import com.gamehub.app.data.remote.dto.SavedGameRequest
 import com.gamehub.app.data.remote.dto.SearchResponseDto
+import com.gamehub.app.data.remote.dto.UnreadCountDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+import com.gamehub.app.data.remote.dto.SettingsRequest
+import com.gamehub.app.data.remote.dto.UserDto
 
 /** The app's own REST API. See backend/README.md for the full endpoint list. */
 interface LootApi {
@@ -30,8 +38,14 @@ interface LootApi {
     @POST("auth/login")
     suspend fun login(@Body body: LoginRequest): AuthResponse
 
+    @POST("auth/google")
+    suspend fun googleLogin(@Body body: GoogleLoginRequest): AuthResponse
+
     @POST("auth/forgot-password")
     suspend fun forgotPassword(@Body body: ForgotPasswordRequest): MessageResponse
+
+    @PATCH("me/settings")
+    suspend fun updateSettings(@Body body: SettingsRequest): UserDto
 
     // ---- Games (IGDB proxy) ------------------------------------------------------------
 
@@ -99,4 +113,24 @@ interface LootApi {
 
     @POST("wishlist/{gameId}/move-to-library")
     suspend fun moveWishlistToLibrary(@Path("gameId") gameId: Int, @Body body: MoveToLibraryRequest): SavedGameDto
+
+    // ---- Notifications ------------------------------------------------------------------
+
+    @GET("notifications")
+    suspend fun getNotifications(): NotificationListDto
+
+    @GET("notifications/unread-count")
+    suspend fun getUnreadCount(): UnreadCountDto
+
+    @POST("notifications/{id}/read")
+    suspend fun markNotificationRead(@Path("id") id: Int): MessageResponse
+
+    @POST("notifications/read-all")
+    suspend fun markAllNotificationsRead(): MessageResponse
+
+    @POST("me/fcm-token")
+    suspend fun registerFcmToken(@Body body: FcmTokenRequest): MessageResponse
+
+    @HTTP(method = "DELETE", path = "me/fcm-token", hasBody = true)
+    suspend fun unregisterFcmToken(@Body body: FcmTokenRequest?): MessageResponse
 }
