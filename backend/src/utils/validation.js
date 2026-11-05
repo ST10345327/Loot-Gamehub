@@ -73,6 +73,13 @@ function parseChangePassword(body = {}) {
   return { currentPassword: body.currentPassword, newPassword: body.newPassword };
 }
 
+function parseGoogleLogin(body = {}) {
+  if (!body || typeof body.idToken !== 'string' || body.idToken.trim().length === 0) {
+    throw Errors.validation({ idToken: 'Firebase ID token is required.' });
+  }
+  return { idToken: body.idToken.trim() };
+}
+
 /** Validates PATCH /me/settings. Every field is optional but must be valid when present. */
 function parseSettings(body = {}) {
   const errors = {};
@@ -170,6 +177,7 @@ module.exports = {
   parseRegistration,
   parseLogin,
   parseChangePassword,
+  parseGoogleLogin,
   parseSettings,
   parseGameId,
   parseSavedGame,

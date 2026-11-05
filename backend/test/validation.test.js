@@ -38,6 +38,13 @@ test('parseRegistration trims, lower-cases the email and reports every bad field
   assert.deepEqual(Object.keys(details).sort(), ['email', 'password', 'username']);
 });
 
+test('parseGoogleLogin trims a Firebase ID token and rejects missing tokens', () => {
+  assert.deepEqual(v.parseGoogleLogin({ idToken: ' token ' }), { idToken: 'token' });
+  validationDetails(() => v.parseGoogleLogin({}));
+  validationDetails(() => v.parseGoogleLogin({ idToken: '  ' }));
+  validationDetails(() => v.parseGoogleLogin(null));
+});
+
 test('parseSettings whitelists fields and needs at least one', () => {
   assert.deepEqual(v.parseSettings({ preferredLanguage: 'zu', wishlistAlerts: false }), {
     preferred_language: 'zu',
