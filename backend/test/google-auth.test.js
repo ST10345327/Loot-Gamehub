@@ -9,6 +9,7 @@ const mysql = require('mysql2/promise');
 const { loadConfig } = require('../src/config');
 const { createPool } = require('../src/db');
 const { createApp } = require('../src/app');
+const { getAuth } = require('firebase-admin/auth');
 const { initFirebase } = require('../src/services/firebase');
 
 const hasTestDatabase = Boolean(process.env.TEST_DB_HOST);
@@ -75,8 +76,8 @@ test.before(async () => {
   });
   pool = createPool(config.db);
 
-  const firebaseAdmin = initFirebase({ NODE_ENV: 'test', FIREBASE_MOCK: 'true' });
-  firebaseAdmin.auth().verifyIdToken = async (idToken) => {
+  const firebaseApp = initFirebase({ NODE_ENV: 'test', FIREBASE_MOCK: 'true' });
+  getAuth(firebaseApp).verifyIdToken = async (idToken) => {
     if (idToken === 'valid-new-user') {
       return { uid: 'google_uid_new', email: 'newgoogle@example.com', email_verified: true, name: 'New Google User' };
     }
