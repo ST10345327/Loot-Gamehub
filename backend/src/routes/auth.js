@@ -5,10 +5,12 @@ const bcrypt = require('bcryptjs');
 const { asyncHandler, Errors } = require('../utils/errors');
 const { requireAuth, signToken } = require('../middleware/auth');
 const { toUserDto } = require('../utils/mappers');
+const { initFirebase } = require('../services/firebase');
 const {
   parseRegistration,
   parseLogin,
   parseChangePassword,
+  parseGoogleLogin,
   validateEmail,
 } = require('../utils/validation');
 
@@ -88,12 +90,92 @@ function createAuthRouter({ pool, config }) {
       const [rows] = await pool.execute('SELECT password_hash FROM users WHERE user_id = ?', [req.userId]);
       if (!rows[0]) throw Errors.unauthorized();
 
+      if (!rows[0].password_hash) {
+        throw Errors.validation({ currentPassword: 'Password change is not supported for Google-only accounts without a password.' });
+      }
+
       const matches = await bcrypt.compare(currentPassword, rows[0].password_hash);
       if (!matches) throw Errors.wrongPassword();
 
       const newHash = await bcrypt.hash(newPassword, config.bcryptRounds);
       await pool.execute('UPDATE users SET password_hash = ? WHERE user_id = ?', [newHash, req.userId]);
       res.json({ message: 'Password updated.' });
+    })
+  );
+
+  router.post(
+    '/google',
+    asyncHandler(async (req, res) => {
+      const { idToken } = parseGoogleLogin(req.body);
+      const admin = initFirebase(process.env);
+      if (!admin || typeof admin.auth !== 'function') {
+        throw Errors.internal('Firebase Auth is not configured on this server.');
+      }
+
+      let decodedToken;
+      try {
+        decodedToken = await admin.auth().verifyIdToken(idToken);
+      } catch (err) {
+        throw err.code === 'auth/id-token-expired'
+          ? Errors.tokenExpired()
+          : Errors.unauthorized('Invalid Firebase ID token.');
+      }
+
+      const { uid, email, email_verified, name } = decodedToken;
+      if (!email || !email_verified) {
+        throw Errors.validation({ idToken: 'Google account email must be verified.' });
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      let [rows] = await pool.execute('SELECT * FROM users WHERE google_uid = ?', [uid]);
+      let user = rows[0];
+
+      if (!user) {
+        const [emailRows] = await pool.execute('SELECT * FROM users WHERE email = ?', [normalizedEmail]);
+        const existingEmailUser = emailRows[0];
+
+        if (existingEmailUser) {
+          if (existingEmailUser.password_hash) {
+            throw Errors.conflict('An account with this email already exists with a password. Please sign in with email and password first to link Google.');
+          }
+          if (existingEmailUser.google_uid && existingEmailUser.google_uid !== uid) {
+            throw Errors.conflict('This email is already associated with a different Google account.');
+          }
+
+          await pool.execute(
+            'UPDATE users SET google_uid = ?, last_active = UTC_TIMESTAMP() WHERE user_id = ?',
+            [uid, existingEmailUser.user_id]
+          );
+          const [updatedRows] = await pool.execute('SELECT * FROM users WHERE user_id = ?', [existingEmailUser.user_id]);
+          user = updatedRows[0];
+        } else {
+          const baseName = (name || normalizedEmail.split('@')[0]).replace(/[^A-Za-z0-9_]/g, '_').slice(0, 25);
+          let candidateUsername = baseName.length >= 3 ? baseName : `user_${baseName}`;
+          let attempts = 0;
+
+          while (!user && attempts < 10) {
+            try {
+              const [result] = await pool.execute(
+                'INSERT INTO users (username, email, password_hash, google_uid) VALUES (?, ?, NULL, ?)',
+                [candidateUsername, normalizedEmail, uid]
+              );
+              const [newRows] = await pool.execute('SELECT * FROM users WHERE user_id = ?', [result.insertId]);
+              user = newRows[0];
+            } catch (err) {
+              if (err.code !== 'ER_DUP_ENTRY' || !String(err.sqlMessage).includes('uq_users_username')) {
+                throw err;
+              }
+              attempts += 1;
+              candidateUsername = `${baseName.slice(0, 20)}_${Math.floor(Math.random() * 9000 + 1000)}`;
+            }
+          }
+          if (!user) throw Errors.internal('Could not generate a unique username for Google user.');
+        }
+      } else {
+        await pool.execute('UPDATE users SET last_active = UTC_TIMESTAMP() WHERE user_id = ?', [user.user_id]);
+      }
+
+      res.json({ token: signToken(config, user.user_id), user: toUserDto(user) });
     })
   );
 

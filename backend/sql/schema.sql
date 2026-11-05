@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS users (
   user_id               INT UNSIGNED NOT NULL AUTO_INCREMENT,
   username              VARCHAR(30)  NOT NULL,
   email                 VARCHAR(100) NOT NULL,
-  password_hash         VARCHAR(255) NOT NULL,            -- bcrypt hash, never the plain password
+  password_hash         VARCHAR(255) NULL,                -- bcrypt hash, or NULL for Google-only users
+  google_uid            VARCHAR(128) NULL,                -- Firebase UID for Google SSO
   preferred_language    ENUM('en','tn','zu')              NOT NULL DEFAULT 'en',
   theme_preference      ENUM('system','light','dark')     NOT NULL DEFAULT 'system',
   notifications_enabled BOOLEAN      NOT NULL DEFAULT TRUE,
@@ -22,7 +23,8 @@ CREATE TABLE IF NOT EXISTS users (
   last_active           DATETIME     NULL,
   PRIMARY KEY (user_id),
   CONSTRAINT uq_users_email    UNIQUE (email),
-  CONSTRAINT uq_users_username UNIQUE (username)
+  CONSTRAINT uq_users_username UNIQUE (username),
+  CONSTRAINT uq_users_google_uid UNIQUE (google_uid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS library (

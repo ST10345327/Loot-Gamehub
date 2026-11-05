@@ -32,7 +32,11 @@ const Errors = {
     new ApiError(409, 'EMAIL_TAKEN', 'An account with this email already exists.'),
   usernameTaken: () =>
     new ApiError(409, 'USERNAME_TAKEN', 'This username is already taken.'),
+  conflict: (message = 'Conflict occurred.') =>
+    new ApiError(409, 'CONFLICT', message),
   notFound: (message = 'Not found.') => new ApiError(404, 'NOT_FOUND', message),
+  internal: (message = 'An internal server error occurred.') =>
+    new ApiError(500, 'INTERNAL_ERROR', message),
   upstream: (message = 'The game service is temporarily unavailable.') =>
     new ApiError(502, 'UPSTREAM_ERROR', message),
   notConfigured: () =>

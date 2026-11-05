@@ -22,6 +22,21 @@ Physical phone: use your PC's LAN IP (`http://192.168.x.x:3000/`) and the same W
 Getting IGDB credentials: create an application at https://dev.twitch.tv/console/apps
 (needs a Twitch account with two-factor authentication), then copy the Client ID and generate a Client Secret.
 
+## Google Sign-In
+
+Enable the Google provider under **Firebase Console > Authentication > Sign-in method** and
+configure the Android app's package name and signing fingerprints in Firebase. Download the
+updated `google-services.json` for the Android app.
+
+On the API host, set `FIREBASE_SERVICE_ACCOUNT_JSON` to the Firebase Admin service-account JSON
+contents (or configure `FIREBASE_CREDENTIALS_PATH` / `FIREBASE_SERVICE_ACCOUNT_BASE64`). Apply
+`sql/migrations/001_add_google_sso.sql` once to an existing MySQL database before deploying;
+new databases created from `sql/schema.sql` already include the Google SSO columns.
+The app exchanges its Firebase ID token at `POST /auth/google`.
+The backend requires Node.js 22 or newer.
+
+Never commit service-account credentials or `google-services.json` to version control.
+
 ## Tests
 
 ```bash
@@ -50,6 +65,7 @@ Errors always look like `{ "error": { "code": "...", "message": "...", "details"
 | --- | --- | --- |
 | POST | `/auth/register` | `{username, email, password}` -> `{token, user}` |
 | POST | `/auth/login` | `{email, password}` -> `{token, user}` |
+| POST | `/auth/google` | `{idToken}` Firebase ID token -> `{token, user}` |
 | POST | `/auth/forgot-password` | `{email}` -> generic message (no email service in the prototype) |
 | POST | `/auth/change-password` | `{currentPassword, newPassword}` |
 | GET | `/me` | current user and settings |
