@@ -12,13 +12,10 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('fs');
-const path = require('path');
-const mysql = require('mysql2/promise');
-
 const { loadConfig } = require('../src/config');
 const { createPool } = require('../src/db');
 const { createApp } = require('../src/app');
+const { resetTestDatabase } = require('../test-support/resetTestDatabase');
 
 const skip = process.env.TEST_DB_HOST ? false : 'Set TEST_DB_HOST (and friends) to run API tests.';
 
@@ -77,24 +74,7 @@ test.before(async () => {
     database: process.env.TEST_DB_NAME,
   };
 
-  // Fresh schema for every run.
-  const admin = await mysql.createConnection(dbConfig);
-  try {
-    for (const table of ['notifications', 'fcm_tokens', 'recently_viewed', 'wishlist', 'favourites', 'library', 'users']) {
-      await admin.query(`DROP TABLE IF EXISTS \`${table}\``);
-    }
-
-    const schema = fs.readFileSync(path.join(__dirname, '..', 'sql', 'schema.sql'), 'utf8');
-    const statements = schema.split(';').filter((statement) => /\bCREATE TABLE IF NOT EXISTS\b/i.test(statement));
-    if (statements.length === 0) {
-      throw new Error('No CREATE TABLE statements found in the API test schema.');
-    }
-    for (const statement of statements) {
-      await admin.query(statement);
-    }
-  } finally {
-    await admin.end();
-  }
+  await resetTestDatabase(dbConfig);
 
   const config = loadConfig({
     JWT_SECRET: 'test-secret-that-is-long-enough',
