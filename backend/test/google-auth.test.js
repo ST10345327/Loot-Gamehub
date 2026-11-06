@@ -2,15 +2,12 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const mysql = require('mysql2/promise');
-
 const { loadConfig } = require('../src/config');
 const { createPool } = require('../src/db');
 const { createApp } = require('../src/app');
 const { getAuth } = require('firebase-admin/auth');
 const { initFirebase } = require('../src/services/firebase');
+const { resetTestDatabase } = require('../test-support/resetTestDatabase');
 
 const hasTestDatabase = Boolean(process.env.TEST_DB_HOST);
 const skip = hasTestDatabase ? false : 'Set TEST_DB_HOST and test database variables to run Google Auth API tests.';
@@ -58,12 +55,7 @@ test.before(async () => {
     password: process.env.TEST_DB_PASSWORD ?? '',
     database: process.env.TEST_DB_NAME,
   };
-  const adminConnection = await mysql.createConnection({ ...dbConfig, multipleStatements: true });
-  await adminConnection.query(
-    'SET FOREIGN_KEY_CHECKS = 0; DROP TABLE IF EXISTS recently_viewed, wishlist, favourites, library, users; SET FOREIGN_KEY_CHECKS = 1;'
-  );
-  await adminConnection.query(fs.readFileSync(path.join(__dirname, '..', 'sql', 'schema.sql'), 'utf8'));
-  await adminConnection.end();
+  await resetTestDatabase(dbConfig);
 
   const config = loadConfig({
     JWT_SECRET: 'test-secret-that-is-long-enough',
