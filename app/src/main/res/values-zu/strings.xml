@@ -41,8 +41,6 @@
     <string name="auth_hide_password">Fihla iphasiwedi</string>
     <string name="auth_password_hint">Okungenani izinhlamvu ezingu-8, kuhlanganise nenombolo.</string>
     <string name="auth_sign_in_google">Ngena nge-Google</string>
-    <string name="default_web_client_id">placeholder-client-id.apps.googleusercontent.com</string>
-
     <string name="forgot_title">Setha kabusha iphasiwedi yakho</string>
     <string name="forgot_body">Faka i-imeyili yakho sizokuthumelela iziqondiso zokusetha kabusha.</string>
     <string name="forgot_send">Thumela</string>

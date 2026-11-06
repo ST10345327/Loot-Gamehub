@@ -41,8 +41,6 @@
     <string name="auth_hide_password">Fitlha lefoko la sephiri</string>
     <string name="auth_password_hint">Ditlhaka di le 8 kgotsa go feta, go akaretsa nomoro.</string>
     <string name="auth_sign_in_google">Tsena ka Google</string>
-    <string name="default_web_client_id">placeholder-client-id.apps.googleusercontent.com</string>
-
     <string name="forgot_title">Baya lefoko la sephiri gape</string>
     <string name="forgot_body">Kwala imeile ya gago mme re tla go romela ditaelo tsa go le baya gape.</string>
     <string name="forgot_send">Romela</string>

@@ -41,8 +41,6 @@
     <string name="auth_hide_password">Hide password</string>
     <string name="auth_password_hint">At least 8 characters, including a number.</string>
     <string name="auth_sign_in_google">Sign in with Google</string>
-    <string name="default_web_client_id">placeholder-client-id.apps.googleusercontent.com</string>
-
     <string name="forgot_title">Reset your password</string>
     <string name="forgot_body">Enter your email and we\'ll send reset instructions.</string>
     <string name="forgot_send">Send</string>
