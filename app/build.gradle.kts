@@ -1,9 +1,30 @@
 import java.io.File
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services") apply false
 }
+
+val releaseSigningProperties = Properties().apply {
+    providers.fileContents(layout.projectDirectory.file("keystore.properties")).asText.orNull?.let {
+        load(it.reader())
+    }
+}
+
+object ReleaseSigningConfig {
+    private lateinit var properties: Properties
+
+    fun configure(properties: Properties) {
+        this.properties = properties
+    }
+
+    fun value(environmentName: String, propertyName: String): String? =
+        System.getenv(environmentName)?.takeIf { it.isNotBlank() }
+            ?: properties.getProperty(propertyName)?.takeIf { it.isNotBlank() }
+}
+
+ReleaseSigningConfig.configure(releaseSigningProperties)
 
 if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
@@ -27,10 +48,10 @@ android {
 
     signingConfigs {
         create("release") {
-            val storePasswordVal = System.getenv("GAMEHUB_RELEASE_STORE_PASSWORD")
-            val keyAliasVal = System.getenv("GAMEHUB_RELEASE_KEY_ALIAS")
-            val keystorePathVal = System.getenv("GAMEHUB_RELEASE_KEYSTORE")
-            val keyPasswordVal = System.getenv("GAMEHUB_RELEASE_KEY_PASSWORD")
+            val storePasswordVal = ReleaseSigningConfig.value("GAMEHUB_RELEASE_STORE_PASSWORD", "storePassword")
+            val keyAliasVal = ReleaseSigningConfig.value("GAMEHUB_RELEASE_KEY_ALIAS", "keyAlias")
+            val keystorePathVal = ReleaseSigningConfig.value("GAMEHUB_RELEASE_KEYSTORE", "storeFile")
+            val keyPasswordVal = ReleaseSigningConfig.value("GAMEHUB_RELEASE_KEY_PASSWORD", "keyPassword")
 
             if (!keystorePathVal.isNullOrBlank()) {
                 storeFile = file(keystorePathVal)
@@ -52,7 +73,7 @@ android {
             optimization {
                 enable = false
             }
-            val keystorePathVal = System.getenv("GAMEHUB_RELEASE_KEYSTORE")
+            val keystorePathVal = ReleaseSigningConfig.value("GAMEHUB_RELEASE_KEYSTORE", "storeFile")
             if (!keystorePathVal.isNullOrBlank()) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -71,10 +92,10 @@ android {
 abstract class ValidateReleaseSigningTask : DefaultTask() {
     @TaskAction
     fun validate() {
-        val storePasswordVal = System.getenv("GAMEHUB_RELEASE_STORE_PASSWORD")
-        val keyAliasVal = System.getenv("GAMEHUB_RELEASE_KEY_ALIAS")
-        val keystorePathVal = System.getenv("GAMEHUB_RELEASE_KEYSTORE")
-        val keyPasswordVal = System.getenv("GAMEHUB_RELEASE_KEY_PASSWORD")
+        val storePasswordVal = ReleaseSigningConfig.value("GAMEHUB_RELEASE_STORE_PASSWORD", "storePassword")
+        val keyAliasVal = ReleaseSigningConfig.value("GAMEHUB_RELEASE_KEY_ALIAS", "keyAlias")
+        val keystorePathVal = ReleaseSigningConfig.value("GAMEHUB_RELEASE_KEYSTORE", "storeFile")
+        val keyPasswordVal = ReleaseSigningConfig.value("GAMEHUB_RELEASE_KEY_PASSWORD", "keyPassword")
 
         val missing = mutableListOf<String>()
         if (storePasswordVal.isNullOrBlank()) missing.add("GAMEHUB_RELEASE_STORE_PASSWORD")
