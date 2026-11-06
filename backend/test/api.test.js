@@ -78,10 +78,20 @@ test.before(async () => {
   };
 
   // Fresh schema for every run.
-  const admin = await mysql.createConnection({ ...dbConfig, multipleStatements: true });
+  const admin = await mysql.createConnection(dbConfig);
   try {
-    await admin.query('SET FOREIGN_KEY_CHECKS = 0; DROP TABLE IF EXISTS notifications, fcm_tokens, recently_viewed, wishlist, favourites, library, users; SET FOREIGN_KEY_CHECKS = 1;');
-    await admin.query(fs.readFileSync(path.join(__dirname, '..', 'sql', 'schema.sql'), 'utf8'));
+    for (const table of ['notifications', 'fcm_tokens', 'recently_viewed', 'wishlist', 'favourites', 'library', 'users']) {
+      await admin.query(`DROP TABLE IF EXISTS \`${table}\``);
+    }
+
+    const schema = fs.readFileSync(path.join(__dirname, '..', 'sql', 'schema.sql'), 'utf8');
+    const statements = schema.split(';').filter((statement) => /\bCREATE TABLE IF NOT EXISTS\b/i.test(statement));
+    if (statements.length === 0) {
+      throw new Error('No CREATE TABLE statements found in the API test schema.');
+    }
+    for (const statement of statements) {
+      await admin.query(statement);
+    }
   } finally {
     await admin.end();
   }
