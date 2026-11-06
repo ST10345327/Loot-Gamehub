@@ -79,9 +79,12 @@ test.before(async () => {
 
   // Fresh schema for every run.
   const admin = await mysql.createConnection({ ...dbConfig, multipleStatements: true });
-  await admin.query('SET FOREIGN_KEY_CHECKS = 0; DROP TABLE IF EXISTS recently_viewed, wishlist, favourites, library, users; SET FOREIGN_KEY_CHECKS = 1;');
-  await admin.query(fs.readFileSync(path.join(__dirname, '..', 'sql', 'schema.sql'), 'utf8'));
-  await admin.end();
+  try {
+    await admin.query('SET FOREIGN_KEY_CHECKS = 0; DROP TABLE IF EXISTS notifications, fcm_tokens, recently_viewed, wishlist, favourites, library, users; SET FOREIGN_KEY_CHECKS = 1;');
+    await admin.query(fs.readFileSync(path.join(__dirname, '..', 'sql', 'schema.sql'), 'utf8'));
+  } finally {
+    await admin.end();
+  }
 
   const config = loadConfig({
     JWT_SECRET: 'test-secret-that-is-long-enough',
@@ -96,8 +99,8 @@ test.before(async () => {
 
 test.after(async () => {
   if (skip) return;
-  await new Promise((resolve) => server.close(resolve));
-  await pool.end();
+  if (server) await new Promise((resolve) => server.close(resolve));
+  if (pool) await pool.end();
 });
 
 test('register stores a bcrypt hash and never returns it', { skip }, async () => {
